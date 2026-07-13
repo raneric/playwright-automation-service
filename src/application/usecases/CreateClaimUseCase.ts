@@ -1,5 +1,4 @@
 import { ClaimInputDTO } from '../dto';
-import { CustomerClaim, ClaimLineItem } from '../../domain/entities';
 import { IClaimAutomationPort } from '../ports';
 import { IBrowserSession } from '../../domain/ports';
 import { Result } from '../../shared/Result';
