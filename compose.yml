@@ -8,6 +8,7 @@ services:
     ports:
       - "3000:3000"
       - "9229:9229"
+
     volumes:
       - .:/app
       - /app/node_modules
@@ -17,20 +18,22 @@ services:
 
     environment:
       NODE_ENV: development
-      # n8n connection — n8n is reachable by its container name on the shared network
-      N8N_BASE_URL: http://n8n:5678
-      # Login credentials for the target ticketing system
-      LOGIN_URL: ${LOGIN_URL:-}
-      LOGIN_USERNAME: ${LOGIN_USERNAME:-}
-      LOGIN_PASSWORD: ${LOGIN_PASSWORD:-}
-      BASE_URL: ${BASE_URL:-}
+      PORT: "3000"
+      LOG_LEVEL: debug
+      SAAS_BASE_URL: ${SAAS_BASE_URL:-http://host.docker.internal:5173}
+      SAAS_LOGIN_URL: ${SAAS_LOGIN_URL:-http://host.docker.internal:5173/login}
+      SAAS_USERNAME: ${SAAS_USERNAME:-admin}
+      SAAS_PASSWORD: ${SAAS_PASSWORD:-password123}
+      BROWSER_HEADLESS: "true"
+      BROWSER_SLOW_MO: "0"
+      BROWSER_MAX_CONTEXTS: "5"
 
     command:
       - node
       - --inspect=0.0.0.0:9229
       - --enable-source-maps
       - --import=tsx
-      - src/index.ts
+      - src/app/server.ts
 
     shm_size: "2gb"
 

@@ -1,27 +1,42 @@
 {
-  "name": "playwright",
-  "version": "1.0.0",
-  "description": "",
-  "main": "dist/index.js",
+  "name": "playwright-automation-service",
+  "version": "2.0.0",
+  "description": "Production-grade Playwright automation service exposing REST APIs",
+  "main": "dist/app/server.js",
+  "type": "commonjs",
   "scripts": {
-    "dev": "tsx watch --inspect=0.0.0.0:9229 src/index.ts",
+    "dev": "tsx watch --inspect=0.0.0.0:9229 src/app/server.ts",
     "build": "tsc",
-    "start": "node dist/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "debug": "node --inspect=0.0.0.0:9229 -r ts-node/register src/index.ts"
+    "start": "node dist/app/server.js",
+    "lint": "eslint 'src/**/*.ts'",
+    "test": "jest --passWithNoTests",
+    "test:unit": "jest --testPathPattern='tests/unit'",
+    "test:integration": "jest --testPathPattern='tests/integration'",
+    "test:playwright": "jest --testPathPattern='tests/playwright'"
   },
-  "keywords": [],
+  "keywords": [
+    "playwright",
+    "automation",
+    "express",
+    "typescript"
+  ],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
   "dependencies": {
+    "awilix": "^12.0.0",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
-    "playwright": "^1.61.1"
+    "pino": "^9.6.0",
+    "pino-pretty": "^13.1.0",
+    "playwright": "^1.61.1",
+    "zod": "^3.24.0"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
+    "@types/jest": "^29.5.14",
     "@types/node": "^26.1.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.2.5",
     "tsx": "^4.23.0",
     "typescript": "^6.0.3"
   }

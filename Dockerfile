@@ -8,9 +8,14 @@ RUN npm ci
 
 # Copy source and build
 COPY tsconfig.json ./
+COPY jest.config.js ./
 COPY src/ ./src/
+COPY tests/ ./tests/
 RUN npm run build
 
 EXPOSE 3000
+
+# Run as non-root user for security
+USER pwuser
 
 CMD ["npm", "start"]
