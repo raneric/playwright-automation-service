@@ -1,0 +1,17 @@
+{
+  "configurations": [
+    {
+      "name": "Attach to tsx",
+      "type": "node",
+      "request": "attach",
+      "port": 9229,
+      "address": "localhost",
+      "localRoot": "${workspaceFolder}",
+      "remoteRoot": "${workspaceFolder}",
+      "sourceMaps": true,
+      "sourceMapPathOverrides": {
+        "${workspaceFolder}/*": "${workspaceFolder}/*",
+      },
+    },
+  ],
+}
