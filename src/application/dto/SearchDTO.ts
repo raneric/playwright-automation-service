@@ -7,7 +7,7 @@ const productInfoSchema = z.object({
 });
 
 export const searchInputSchema = z.object({
-  customer: z.string().min(1, 'Customer name is required'),
+  customer: z.string().default("N/A"),
   products: z.array(productInfoSchema).min(1, 'At least one product is required'),
 });
 

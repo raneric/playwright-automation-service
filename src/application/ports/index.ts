@@ -1,4 +1,5 @@
 export type {
+  IBrowserSession,
   IClaimAutomationPort,
   IOrderAutomationPort,
   ISearchAutomationPort,

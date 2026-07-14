@@ -2,6 +2,7 @@ import { Page } from 'playwright';
 import { Logger } from '../../logger';
 import { BasePage } from './BasePage';
 import { ProductResult } from '../../../domain/entities';
+import { DEFAULT_TIMEOUTS } from '../../../shared/constants';
 
 /**
  * Page Object for the Purchase Order List page.
@@ -16,68 +17,86 @@ export class OrderListPage extends BasePage {
     await this.waitForReady('[data-testid="po-list-table"]');
   }
 
-  /** Clear the search input */
+  /**
+   * Clear a previous search result.
+   * Waits for the table to settle rather than using a fixed timeout.
+   */
   async clearSearch(): Promise<void> {
     const clearBtn = await this.page.$('[data-testid="po-list-search-clear"]');
     if (clearBtn) {
       await clearBtn.click();
-      await this.page.waitForTimeout(300);
+      // Wait for the table to re-render in its cleared state
+      await this.page.waitForSelector('[data-testid="po-list-table"]', {
+        state: 'visible',
+        timeout: DEFAULT_TIMEOUTS.selector,
+      });
     }
   }
 
-  /** Type a search term and click the search button */
+  /**
+   * Type a search term and wait for the table to finish updating.
+   * Avoids fixed timeouts by watching for the loading indicator to appear
+   * then disappear, falling back to a stable table re-render.
+   */
   async search(term: string): Promise<void> {
     await this.page.fill('[data-testid="po-list-search"]', term);
-    await this.page.click('.po-list-search-btn');
-    await this.page.waitForTimeout(800);
-  }
+    // Use data-testid selector — consistent with the rest of the codebase
+    await this.clickByTestId('po-list-search-btn');
 
-  /** Check if the "no results" or "loading" indicator is visible */
-  async hasNoResults(): Promise<boolean> {
-    const empty = await this.page.$('[data-testid="po-list-empty"]');
-    const loading = await this.page.$('[data-testid="po-list-loading"]');
-    return empty !== null || loading !== null;
-  }
+    // Wait for loading to start (may be brief or absent on fast connections)
+    const loadingStarted = await this.page
+      .waitForSelector('[data-testid="po-list-loading"]', {
+        state: 'visible',
+        timeout: 500,
+      })
+      .then(() => true)
+      .catch(() => false);
 
-  /** Extract all visible product rows from the table */
-  async extractProducts(): Promise<ProductResult[]> {
-    const rows = await this.page.$$('tr[data-testid^="po-list-row-"]');
-    const results: ProductResult[] = [];
-
-    for (const row of rows) {
-      const testId = await row.getAttribute('data-testid');
-      if (!testId) continue;
-
-      const index = testId.replace('po-list-row-', '');
-
-      const itemCode = await this.page
-        .textContent(`[data-testid="po-list-row-${index}-item-code"]`)
-        .then((t) => t?.trim() || '');
-      const productName = await this.page
-        .textContent(`[data-testid="po-list-row-${index}-product"]`)
-        .then((t) => t?.trim() || '');
-      const vendor = await this.page
-        .textContent(`[data-testid="po-list-row-${index}-vendor"]`)
-        .then((t) => t?.trim() || '');
-      const customerName = await this.page
-        .textContent(`[data-testid="po-list-row-${index}-customer"]`)
-        .then((t) => t?.trim() || '');
-      const orderCode = await this.page
-        .textContent(`[data-testid="po-list-row-${index}-order-code"]`)
-        .then((t) => t?.trim() || '');
-
-      if (itemCode || productName) {
-        results.push({
-          itemCode,
-          productName,
-          vendor,
-          customerName,
-          orderCode,
-          existsInSystem: true,
-        });
-      }
+    if (loadingStarted) {
+      // Wait for loading to finish
+      await this.page.waitForSelector('[data-testid="po-list-loading"]', {
+        state: 'hidden',
+        timeout: DEFAULT_TIMEOUTS.selector,
+      });
+    } else {
+      // No loading indicator — wait for the table to be visible and stable
+      await this.page.waitForSelector('[data-testid="po-list-table"]', {
+        state: 'visible',
+        timeout: DEFAULT_TIMEOUTS.selector,
+      });
     }
+  }
 
-    return results;
+  /** Check if the "no results" indicator is visible */
+  async hasNoResults(): Promise<boolean> {
+    return (await this.page.$('[data-testid="po-list-empty"]')) !== null;
+  }
+
+  /**
+   * Extract all visible product rows from the table in a single browser
+   * evaluation — avoids N+1 round-trips for large tables.
+   */
+  async extractProducts(): Promise<ProductResult[]> {
+    return this.page.$$eval('tr[data-testid^="po-list-row-"]', (rows) =>
+      rows
+        .map((row) => {
+          const testId = row.getAttribute('data-testid') ?? '';
+          const index = testId.replace('po-list-row-', '');
+          const get = (field: string): string =>
+            row
+              .querySelector(`[data-testid="po-list-row-${index}-${field}"]`)
+              ?.textContent?.trim() ?? '';
+
+          return {
+            itemCode: get('item-code'),
+            productName: get('product'),
+            vendor: get('vendor'),
+            customerName: get('customer'),
+            orderCode: get('order-code'),
+            existsInSystem: true,
+          };
+        })
+        .filter((r) => r.itemCode !== '' || r.productName !== ''),
+    );
   }
 }

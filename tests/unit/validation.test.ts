@@ -1,3 +1,4 @@
+import { describe } from 'node:test';
 import { claimInputSchema, ClaimInputDTO } from '../../src/application/dto';
 
 describe('ClaimInputDTO validation', () => {

@@ -1,6 +1,5 @@
 import { ClaimInputDTO } from '../dto';
-import { IClaimAutomationPort } from '../ports';
-import { IBrowserSession } from '../../domain/ports';
+import { IClaimAutomationPort, IBrowserSession } from '../ports';
 import { Result } from '../../shared/Result';
 import { Logger } from '../../infrastructure/logger';
 import { AutomationError } from '../../shared/errors';

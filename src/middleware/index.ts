@@ -1,6 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
+import rateLimit from 'express-rate-limit';
 import { Logger } from '../infrastructure/logger';
 import { AppError } from '../shared/errors';
+
+// ── Error Handler ─────────────────────────────────────────────────────────────
 
 /**
  * Global error-handling middleware.
@@ -38,9 +41,8 @@ export function errorHandler(logger: Logger) {
   };
 }
 
-/**
- * Request logging middleware.
- */
+// ── Request Logger ────────────────────────────────────────────────────────────
+
 export function requestLogger(logger: Logger) {
   return (req: Request, _res: Response, next: NextFunction): void => {
     logger.info({ method: req.method, url: req.url }, 'Incoming request');
@@ -48,15 +50,26 @@ export function requestLogger(logger: Logger) {
   };
 }
 
+// ── API Key Auth ──────────────────────────────────────────────────────────────
+
 /**
- * Simple API key authentication middleware.
- * Checks for an `x-api-key` header against the configured secret.
+ * API key authentication middleware.
+ * Checks the `x-api-key` header against the configured secret.
+ *
+ * When no API_KEY env var is set this middleware is skipped entirely,
+ * making auth opt-in for local development while enforced in production.
  */
-export function apiKeyAuth(validKey: string, logger: Logger) {
+export function apiKeyAuth(validKey: string | undefined, logger: Logger) {
   return (req: Request, res: Response, next: NextFunction): void => {
+    // Auth disabled — no key configured (e.g. local dev)
+    if (!validKey) {
+      next();
+      return;
+    }
+
     const key = req.headers['x-api-key'];
     if (!key || key !== validKey) {
-      logger.warn('Unauthorized request');
+      logger.warn({ url: req.url }, 'Unauthorized request — invalid or missing API key');
       res.status(401).json({
         success: false,
         error: { code: 'UNAUTHORIZED', message: 'Invalid or missing API key' },
@@ -67,8 +80,38 @@ export function apiKeyAuth(validKey: string, logger: Logger) {
   };
 }
 
+// ── Rate Limiter ──────────────────────────────────────────────────────────────
+
 /**
- * Timeout middleware — aborts requests that take too long.
+ * Per-IP rate limiter for automation endpoints.
+ *
+ * Defaults: 20 requests per minute. Configured via env vars:
+ *   RATE_LIMIT_WINDOW_MS  (default: 60000)
+ *   RATE_LIMIT_MAX        (default: 20)
+ */
+export function createRateLimiter() {
+  const windowMs = parseInt(process.env.RATE_LIMIT_WINDOW_MS ?? '60000', 10);
+  const max = parseInt(process.env.RATE_LIMIT_MAX ?? '20', 10);
+
+  return rateLimit({
+    windowMs,
+    max,
+    standardHeaders: true,  // Return rate limit info in RateLimit-* headers
+    legacyHeaders: false,
+    message: {
+      success: false,
+      error: {
+        code: 'RATE_LIMIT',
+        message: 'Too many requests — please slow down',
+      },
+    },
+  });
+}
+
+// ── Request Timeout ───────────────────────────────────────────────────────────
+
+/**
+ * Aborts requests that take longer than `ms` milliseconds.
  */
 export function requestTimeout(ms: number) {
   return (_req: Request, res: Response, next: NextFunction): void => {

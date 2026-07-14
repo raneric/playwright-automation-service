@@ -71,6 +71,7 @@ export class FormPage extends BasePage {
       const errors = await this.page.$$eval('.field-error', (els) =>
         els.map((el) => el.textContent?.trim()).filter(Boolean),
       );
+      await this.screenshot(`${this.config.prefix}-form-validation-error`);
       throw new Error(
         `Form validation failed:\n${errors.map((e) => `  - ${e}`).join('\n')}`,
       );

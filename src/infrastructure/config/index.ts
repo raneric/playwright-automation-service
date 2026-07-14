@@ -1,2 +1,2 @@
-export { loadConfig } from './AppConfig';
+export { loadConfig, redactConfig } from './AppConfig';
 export type { AppConfig } from './AppConfig';

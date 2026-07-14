@@ -1,6 +1,5 @@
 import { SearchInputDTO } from '../dto';
-import { ISearchAutomationPort } from '../ports';
-import { IBrowserSession } from '../../domain/ports';
+import { ISearchAutomationPort, IBrowserSession } from '../ports';
 import { Result } from '../../shared/Result';
 import { Logger } from '../../infrastructure/logger';
 import { AutomationError } from '../../shared/errors';

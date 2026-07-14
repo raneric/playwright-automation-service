@@ -14,6 +14,8 @@ export interface AppConfig {
     loginUrl: string;
     username: string;
     password: string;
+    /** Optional API key for protecting the automation service's own endpoints */
+    apiKey: string | undefined;
   };
 
   /** Playwright browser configuration */
@@ -41,6 +43,17 @@ function envBool(key: string, fallback: boolean): boolean {
   return val === '1' || val.toLowerCase() === 'true';
 }
 
+/**
+ * Serialization-safe view of the config — password redacted.
+ * Used when logging the config at startup.
+ */
+export function redactConfig(config: AppConfig): Record<string, unknown> {
+  return {
+    ...config,
+    saas: { ...config.saas, password: '[REDACTED]' },
+  };
+}
+
 export function loadConfig(): AppConfig {
   return {
     nodeEnv: envStr('NODE_ENV', 'development'),
@@ -53,10 +66,11 @@ export function loadConfig(): AppConfig {
       loginUrl: envStr('SAAS_LOGIN_URL', 'http://localhost:5173/login'),
       username: envStr('SAAS_USERNAME', 'admin'),
       password: envStr('SAAS_PASSWORD', 'password123'),
+      apiKey: process.env.API_KEY || undefined,
     },
 
     browser: {
-      headless: envBool('BROWSER_HEADLESS', true),
+      headless: envBool('BROWSER_HEADLESS', false),
       slowMo: envInt('BROWSER_SLOW_MO', 0),
       viewport: {
         width: envInt('BROWSER_VIEWPORT_WIDTH', 1280),
