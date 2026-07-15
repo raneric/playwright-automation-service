@@ -6,13 +6,14 @@ import { Logger } from '../../../shared/logger';
 export class OrderController {
   constructor(
     private readonly createOrderUseCase: CreateOrderUseCase,
-    private readonly logger: Logger,
+    private readonly logger: Logger
   ) {}
 
   create = async (req: Request, res: Response): Promise<void> => {
+    const platform = req.params.platform as string;
     const input: OrderInputDTO = req.body;
 
-    const result = await this.createOrderUseCase.execute(input);
+    const result = await this.createOrderUseCase.execute(platform, input);
 
     if (!result.success) {
       res.status(422).json({

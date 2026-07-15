@@ -27,8 +27,8 @@ import { DEFAULT_TIMEOUTS } from '../shared/constants';
  *  3. Request timeout
  *  4. Health check (unauthenticated)
  *  5. Rate limiter  } applied to /api/* only
- *  6. API key auth  }
- *  7. Route handlers
+ *  6. API key auth  } per-platform
+ *  7. Route handlers (mounted under /api/:platform)
  *  8. Error handler (must be last)
  */
 export function createApp(container: AwilixContainer): Express {
@@ -44,14 +44,31 @@ export function createApp(container: AwilixContainer): Express {
   // ── Health check (no auth, no rate limit) ────────────────────────────────
   app.use('/health', createHealthRoutes());
 
-  // ── API routes (rate-limited + authenticated) ────────────────────────────
+  // ── API routes (rate-limited + per-platform authenticated) ────────────────
   const apiRouter = express.Router();
   apiRouter.use(createRateLimiter());
-  apiRouter.use(apiKeyAuth(config.saas.apiKey, logger));
 
-  apiRouter.use('/claim', createClaimRoutes(container.resolve('claimController')));
-  apiRouter.use('/order', createOrderRoutes(container.resolve('orderController')));
-  apiRouter.use('/search', createSearchRoutes(container.resolve('searchController')));
+  // Per-platform API key auth: resolves the key from the :platform param
+  apiRouter.use('/:platform', (req, res, next) => {
+    const platformName = req.params.platform as string;
+    const platform = config.platforms[platformName];
+    const apiKey = platform?.apiKey ?? config.defaultApiKey;
+    apiKeyAuth(apiKey, logger)(req, res, next);
+  });
+
+  // Mount resource routes under /api/:platform
+  apiRouter.use(
+    '/:platform/claim',
+    createClaimRoutes(container.resolve('claimController'))
+  );
+  apiRouter.use(
+    '/:platform/order',
+    createOrderRoutes(container.resolve('orderController'))
+  );
+  apiRouter.use(
+    '/:platform/search',
+    createSearchRoutes(container.resolve('searchController'))
+  );
 
   app.use('/api', apiRouter);
 

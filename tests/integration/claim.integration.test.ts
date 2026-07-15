@@ -1,5 +1,5 @@
 /**
- * Integration test for POST /api/claim and GET /health
+ * Integration test for POST /api/:platform/claim and GET /health
  *
  * Spins up the full Express application with all infrastructure dependencies
  * (BrowserManager, automation ports) replaced by lightweight mocks. Verifies:
@@ -57,14 +57,6 @@ const mockClaimAutomation = {
   createClaim: jest.fn().mockResolvedValue(Result.ok('CC-001')),
 };
 
-const mockOrderAutomation = {
-  createOrder: jest.fn().mockResolvedValue(Result.ok('PO-001')),
-};
-
-const mockSearchAutomation = {
-  searchProducts: jest.fn().mockResolvedValue(Result.ok([])),
-};
-
 const mockLoginWorkflow = {
   login: jest.fn().mockResolvedValue(undefined),
 };
@@ -76,15 +68,18 @@ function buildTestApp() {
   const logger = createLogger({ level: 'silent', pretty: false });
 
   // Build the real container then override infrastructure with mocks.
-  // asValue() registers a pre-constructed instance — Awilix won't try to
-  // call the constructor or resolve further dependencies for these keys.
   const container = buildContainer(config, logger);
   container.register({
     browserSession: asValue(mockBrowserSession),
-    loginWorkflow: asValue(mockLoginWorkflow),
-    claimAutomation: asValue(mockClaimAutomation),
-    orderAutomation: asValue(mockOrderAutomation),
-    searchAutomation: asValue(mockSearchAutomation),
+    // Override per-platform factories with mocks that ignore the platform arg
+    getLoginWorkflow: asValue(() => mockLoginWorkflow),
+    getClaimAutomation: asValue(() => mockClaimAutomation),
+    getOrderAutomation: asValue(() => ({
+      createOrder: jest.fn().mockResolvedValue(Result.ok('PO-001')),
+    })),
+    getSearchAutomation: asValue(() => ({
+      searchProducts: jest.fn().mockResolvedValue(Result.ok([])),
+    })),
   });
 
   return createApp(container);
@@ -128,7 +123,7 @@ const validClaimPayload = {
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
-describe('POST /api/claim', () => {
+describe('POST /api/:platform/claim', () => {
   let app: ReturnType<typeof buildTestApp>;
 
   beforeAll(() => {
@@ -147,7 +142,7 @@ describe('POST /api/claim', () => {
 
   it('returns 201 with claimId on success', async () => {
     const res = await request(app)
-      .post('/api/claim')
+      .post('/api/default/claim')
       .send(validClaimPayload)
       .expect(201);
 
@@ -156,12 +151,18 @@ describe('POST /api/claim', () => {
     expect(mockBrowserSession.createAuthenticatedSession).toHaveBeenCalledTimes(
       1
     );
+    expect(mockBrowserSession.createAuthenticatedSession).toHaveBeenCalledWith(
+      'default'
+    );
     expect(mockClaimAutomation.createClaim).toHaveBeenCalledTimes(1);
     expect(mockBrowserSession.releaseSession).toHaveBeenCalledTimes(1);
   });
 
   it('returns 400 when body is empty', async () => {
-    const res = await request(app).post('/api/claim').send({}).expect(400);
+    const res = await request(app)
+      .post('/api/default/claim')
+      .send({})
+      .expect(400);
 
     expect(res.body.success).toBe(false);
     expect(res.body.error.code).toBe('VALIDATION_ERROR');
@@ -170,7 +171,7 @@ describe('POST /api/claim', () => {
 
   it('returns 400 when productLines is empty', async () => {
     const res = await request(app)
-      .post('/api/claim')
+      .post('/api/default/claim')
       .send({ ...validClaimPayload, productLines: [] })
       .expect(400);
 
@@ -181,7 +182,7 @@ describe('POST /api/claim', () => {
 
   it('returns 400 when customer email is invalid', async () => {
     const res = await request(app)
-      .post('/api/claim')
+      .post('/api/default/claim')
       .send({
         ...validClaimPayload,
         customer: { ...validClaimPayload.customer, email: 'not-an-email' },
@@ -199,7 +200,7 @@ describe('POST /api/claim', () => {
     );
 
     const res = await request(app)
-      .post('/api/claim')
+      .post('/api/default/claim')
       .send(validClaimPayload)
       .expect(422);
 

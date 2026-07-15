@@ -15,31 +15,45 @@ export interface SearchProductsOutput {
 export class SearchProductsUseCase {
   constructor(
     private readonly browserSession: IBrowserSession,
-    private readonly searchAutomation: ISearchAutomationPort,
-    private readonly logger: Logger,
+    private readonly getSearchAutomation: (
+      platform: string
+    ) => ISearchAutomationPort,
+    private readonly logger: Logger
   ) {}
 
-  async execute(input: SearchInputDTO): Promise<Result<SearchProductsOutput>> {
-    this.logger.info({ customer: input.customer }, 'SearchProductsUseCase: starting');
+  async execute(
+    platform: string,
+    input: SearchInputDTO
+  ): Promise<Result<SearchProductsOutput>> {
+    this.logger.info(
+      { platform, customer: input.customer },
+      'SearchProductsUseCase: starting'
+    );
 
     const productNames = input.products.map((p) => p.product_name);
-    const { page } = await this.browserSession.createAuthenticatedSession();
+    const { page } = await this.browserSession.createAuthenticatedSession(
+      platform
+    );
 
     try {
-      const result = await this.searchAutomation.searchProducts(
+      const automation = this.getSearchAutomation(platform);
+      const result = await automation.searchProducts(
         page,
         input.customer,
-        productNames,
+        productNames
       );
 
       if (!result.success) {
-        this.logger.error({ error: result.error }, 'Search automation failed');
+        this.logger.error(
+          { platform, error: result.error },
+          'Search automation failed'
+        );
         return Result.fail(new AutomationError(result.error.message));
       }
 
       this.logger.info(
-        { count: result.value.length },
-        'SearchProductsUseCase: completed',
+        { platform, count: result.value.length },
+        'SearchProductsUseCase: completed'
       );
 
       return Result.ok({ products: result.value });

@@ -10,24 +10,41 @@ import { AutomationError } from '../../shared/errors';
 export class CreateOrderUseCase {
   constructor(
     private readonly browserSession: IBrowserSession,
-    private readonly orderAutomation: IOrderAutomationPort,
-    private readonly logger: Logger,
+    private readonly getOrderAutomation: (
+      platform: string
+    ) => IOrderAutomationPort,
+    private readonly logger: Logger
   ) {}
 
-  async execute(input: OrderInputDTO): Promise<Result<{ orderId: string }>> {
-    this.logger.info({ orderCode: input.order_code }, 'CreateOrderUseCase: starting');
+  async execute(
+    platform: string,
+    input: OrderInputDTO
+  ): Promise<Result<{ orderId: string }>> {
+    this.logger.info(
+      { platform, orderCode: input.order_code },
+      'CreateOrderUseCase: starting'
+    );
 
-    const { page } = await this.browserSession.createAuthenticatedSession();
+    const { page } = await this.browserSession.createAuthenticatedSession(
+      platform
+    );
 
     try {
-      const result = await this.orderAutomation.createOrder(page, this.toFormData(input));
+      const automation = this.getOrderAutomation(platform);
+      const result = await automation.createOrder(page, this.toFormData(input));
 
       if (!result.success) {
-        this.logger.error({ error: result.error }, 'Order automation failed');
+        this.logger.error(
+          { platform, error: result.error },
+          'Order automation failed'
+        );
         return Result.fail(new AutomationError(result.error.message));
       }
 
-      this.logger.info({ orderId: result.value }, 'CreateOrderUseCase: completed');
+      this.logger.info(
+        { platform, orderId: result.value },
+        'CreateOrderUseCase: completed'
+      );
       return Result.ok({ orderId: result.value });
     } finally {
       await this.browserSession.releaseSession(page.context(), page);

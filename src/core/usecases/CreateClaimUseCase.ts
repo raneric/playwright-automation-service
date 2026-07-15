@@ -9,36 +9,53 @@ import { AutomationError } from '../../shared/errors';
  *
  * Orchestrates:
  *  1. Transform the API DTO into the domain entity
- *  2. Acquire an authenticated browser session
- *  3. Delegate form filling to the automation port
+ *  2. Acquire an authenticated browser session for the target platform
+ *  3. Delegate form filling to the automation port (resolved per-platform)
  *  4. Return the claim ID
  */
 export class CreateClaimUseCase {
   constructor(
     private readonly browserSession: IBrowserSession,
-    private readonly claimAutomation: IClaimAutomationPort,
-    private readonly logger: Logger,
+    private readonly getClaimAutomation: (
+      platform: string
+    ) => IClaimAutomationPort,
+    private readonly logger: Logger
   ) {}
 
-  async execute(input: ClaimInputDTO): Promise<Result<{ claimId: string }>> {
-    this.logger.info({ orderCode: input.customer }, 'CreateClaimUseCase: starting');
+  async execute(
+    platform: string,
+    input: ClaimInputDTO
+  ): Promise<Result<{ claimId: string }>> {
+    this.logger.info(
+      { platform, orderCode: input.customer },
+      'CreateClaimUseCase: starting'
+    );
 
     // 1. Transform DTO → domain entity → form data
     const formData = this.toFormData(input);
 
-    // 2. Acquire authenticated session
-    const { page } = await this.browserSession.createAuthenticatedSession();
+    // 2. Acquire authenticated session for the target platform
+    const { page } = await this.browserSession.createAuthenticatedSession(
+      platform
+    );
 
     try {
-      // 3. Execute automation
-      const result = await this.claimAutomation.createClaim(page, formData);
+      // 3. Execute automation (resolved per-platform)
+      const automation = this.getClaimAutomation(platform);
+      const result = await automation.createClaim(page, formData);
 
       if (!result.success) {
-        this.logger.error({ error: result.error }, 'Claim automation failed');
+        this.logger.error(
+          { platform, error: result.error },
+          'Claim automation failed'
+        );
         return Result.fail(new AutomationError(result.error.message));
       }
 
-      this.logger.info({ claimId: result.value }, 'CreateClaimUseCase: completed');
+      this.logger.info(
+        { platform, claimId: result.value },
+        'CreateClaimUseCase: completed'
+      );
       return Result.ok({ claimId: result.value });
     } finally {
       await this.browserSession.releaseSession(page.context(), page);

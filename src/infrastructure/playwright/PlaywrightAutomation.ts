@@ -1,7 +1,6 @@
 import { Page } from 'playwright';
 import { Logger } from '../../shared/logger';
-import { AppConfig } from '../config';
-import { BrowserManager } from './BrowserManager';
+import { PlatformConfig } from '../config';
 import { LoginPage } from './pages/LoginPage';
 import { FormPage } from './pages/FormPage';
 import { OrderListPage } from './pages/OrderListPage';
@@ -21,21 +20,21 @@ import { ProductResult } from '../../core/domain/entities';
  */
 export class PlaywrightClaimAutomation implements IClaimAutomationPort {
   constructor(
-    private readonly config: AppConfig,
-    private readonly logger: Logger,
+    private readonly platform: PlatformConfig,
+    private readonly logger: Logger
   ) {}
 
   async createClaim(
     page: Page,
-    claimData: Record<string, unknown>,
+    claimData: Record<string, unknown>
   ): Promise<Result<string>> {
     try {
       const formPage = new FormPage(page, this.logger, customerClaimConfig);
 
       await gotoWithRetry(
         page,
-        `${this.config.saas.baseUrl}${PagePath.customerClaim}`,
-        this.logger,
+        `${this.platform.baseUrl}${PagePath.customerClaim}`,
+        this.logger
       );
       await formPage.waitForForm();
 
@@ -62,21 +61,21 @@ export class PlaywrightClaimAutomation implements IClaimAutomationPort {
  */
 export class PlaywrightOrderAutomation implements IOrderAutomationPort {
   constructor(
-    private readonly config: AppConfig,
-    private readonly logger: Logger,
+    private readonly platform: PlatformConfig,
+    private readonly logger: Logger
   ) {}
 
   async createOrder(
     page: Page,
-    orderData: Record<string, unknown>,
+    orderData: Record<string, unknown>
   ): Promise<Result<string>> {
     try {
       const formPage = new FormPage(page, this.logger, purchaseOrderConfig);
 
       await gotoWithRetry(
         page,
-        `${this.config.saas.baseUrl}${PagePath.purchaseOrder}`,
-        this.logger,
+        `${this.platform.baseUrl}${PagePath.purchaseOrder}`,
+        this.logger
       );
       await formPage.waitForForm();
 
@@ -99,22 +98,22 @@ export class PlaywrightOrderAutomation implements IOrderAutomationPort {
  */
 export class PlaywrightSearchAutomation implements ISearchAutomationPort {
   constructor(
-    private readonly config: AppConfig,
-    private readonly logger: Logger,
+    private readonly platform: PlatformConfig,
+    private readonly logger: Logger
   ) {}
 
   async searchProducts(
     page: Page,
     customer: string,
-    productNames: string[],
+    productNames: string[]
   ): Promise<Result<ProductResult[]>> {
     try {
       const listPage = new OrderListPage(page, this.logger);
 
       await gotoWithRetry(
         page,
-        `${this.config.saas.baseUrl}${PagePath.purchaseOrderList}`,
-        this.logger,
+        `${this.platform.baseUrl}${PagePath.purchaseOrderList}`,
+        this.logger
       );
       await listPage.waitForTable();
 
@@ -161,22 +160,15 @@ export class PlaywrightSearchAutomation implements ISearchAutomationPort {
  */
 export class PlaywrightLoginWorkflow {
   constructor(
-    private readonly config: AppConfig,
-    private readonly logger: Logger,
+    private readonly platform: PlatformConfig,
+    private readonly logger: Logger
   ) {}
 
   async login(page: Page): Promise<void> {
     const loginPage = new LoginPage(page, this.logger);
 
-    await gotoWithRetry(
-      page,
-      this.config.saas.loginUrl,
-      this.logger,
-    );
+    await gotoWithRetry(page, this.platform.loginUrl, this.logger);
 
-    await loginPage.login(
-      this.config.saas.username,
-      this.config.saas.password,
-    );
+    await loginPage.login(this.platform.username, this.platform.password);
   }
 }

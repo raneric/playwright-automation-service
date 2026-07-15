@@ -4,7 +4,7 @@ import { validate } from '../validation';
 import { claimInputSchema } from '../../../core/dto';
 
 export function createClaimRoutes(controller: ClaimController): Router {
-  const router = Router();
+  const router = Router({ mergeParams: true });
 
   router.post('/', validate(claimInputSchema), controller.create);
 

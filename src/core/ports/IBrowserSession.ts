@@ -20,10 +20,14 @@ export interface IBrowserSession {
   createSession(): Promise<{ context: unknown; page: Page }>;
 
   /**
-   * Obtain an authenticated session.
-   * The first call performs login; subsequent calls reuse the cached context.
+   * Obtain an authenticated session for a specific platform.
+   * The first call per platform performs login; subsequent calls reuse the cached context.
+   *
+   * @param platform - The platform name (e.g. "acme", "contoso")
    */
-  createAuthenticatedSession(): Promise<{ context: unknown; page: Page }>;
+  createAuthenticatedSession(
+    platform: string
+  ): Promise<{ context: unknown; page: Page }>;
 
   /** Release a session back to the pool (or close it if not reusable). */
   releaseSession(context: unknown, page?: unknown): Promise<void>;

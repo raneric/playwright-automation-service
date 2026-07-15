@@ -4,7 +4,7 @@ import { validate } from '../validation';
 import { orderInputSchema } from '../../../core/dto';
 
 export function createOrderRoutes(controller: OrderController): Router {
-  const router = Router();
+  const router = Router({ mergeParams: true });
 
   router.post('/', validate(orderInputSchema), controller.create);
 

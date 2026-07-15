@@ -35,7 +35,7 @@ class Semaphore {
  * Responsibilities:
  *  - Launch / shutdown the browser instance
  *  - Create isolated BrowserContexts (each = one "session")
- *  - Pool and reuse the authenticated context across requests
+ *  - Maintain one authenticated context per platform (multi-tenant)
  *  - Enforce the maxConcurrentContexts limit via a semaphore
  *
  * This is a singleton-scoped service in the DI container.
@@ -43,13 +43,17 @@ class Semaphore {
 export class BrowserManager implements IBrowserSession {
   private browser: Browser | null = null;
   private activeContexts = new Set<BrowserContext>();
-  private authenticatedContext: BrowserContext | null = null;
+  /** One authenticated context per platform name */
+  private authenticatedContexts = new Map<string, BrowserContext>();
   private readonly semaphore: Semaphore;
 
   constructor(
     private readonly config: AppConfig,
     private readonly logger: Logger,
-    private readonly loginWorkflow: PlaywrightLoginWorkflow
+    /** Factory: given a platform name, returns a login workflow for that platform */
+    private readonly getLoginWorkflow: (
+      platform: string
+    ) => PlaywrightLoginWorkflow
   ) {
     this.semaphore = new Semaphore(config.browser.maxConcurrentContexts);
   }
@@ -79,29 +83,33 @@ export class BrowserManager implements IBrowserSession {
   }
 
   /**
-   * Create (or reuse) an already-authenticated session.
-   * The first call performs login; subsequent calls open a new page inside
-   * the existing context — no re-login needed.
+   * Create (or reuse) an already-authenticated session for a specific platform.
+   * The first call per platform performs login; subsequent calls open a new page
+   * inside the existing context — no re-login needed.
    *
-   * Note: The semaphore is NOT acquired for the authenticated context because
-   * it is a shared singleton — it doesn't consume an additional slot per request.
+   * @param platform - The platform name (e.g. "acme", "contoso")
    */
-  async createAuthenticatedSession(): Promise<{
+  async createAuthenticatedSession(platform: string): Promise<{
     context: BrowserContext;
     page: Page;
   }> {
-    if (this.authenticatedContext) {
-      this.logger.debug('Reusing authenticated browser context');
-      const page = await this.authenticatedContext.newPage();
-      return { context: this.authenticatedContext, page };
+    const existing = this.authenticatedContexts.get(platform);
+    if (existing) {
+      this.logger.debug({ platform }, 'Reusing authenticated browser context');
+      const page = await existing.newPage();
+      return { context: existing, page };
     }
 
     const { context, page } = await this.createSession();
 
-    this.logger.info('Performing initial login for authenticated session');
-    await this.loginWorkflow.login(page);
+    this.logger.info(
+      { platform },
+      'Performing initial login for authenticated session'
+    );
+    const loginWorkflow = this.getLoginWorkflow(platform);
+    await loginWorkflow.login(page);
 
-    this.authenticatedContext = context;
+    this.authenticatedContexts.set(platform, context);
     return { context, page };
   }
 
@@ -122,11 +130,15 @@ export class BrowserManager implements IBrowserSession {
       }
     }
 
-    if (ctx === this.authenticatedContext) {
-      this.logger.debug(
-        'Released page from authenticated context (context retained)'
-      );
-      return;
+    // Check if this is any platform's authenticated context
+    for (const [platform, authCtx] of this.authenticatedContexts) {
+      if (ctx === authCtx) {
+        this.logger.debug(
+          { platform },
+          'Released page from authenticated context (context retained)'
+        );
+        return;
+      }
     }
 
     this.activeContexts.delete(ctx);
@@ -142,7 +154,7 @@ export class BrowserManager implements IBrowserSession {
   /** Tear down the entire browser — called on graceful shutdown. */
   async shutdown(): Promise<void> {
     this.logger.info('Shutting down browser');
-    this.authenticatedContext = null;
+    this.authenticatedContexts.clear();
 
     for (const ctx of this.activeContexts) {
       try {
@@ -176,10 +188,10 @@ export class BrowserManager implements IBrowserSession {
 
       this.browser.on('disconnected', () => {
         this.logger.warn(
-          'Browser disconnected unexpectedly — clearing cached session'
+          'Browser disconnected unexpectedly — clearing cached sessions'
         );
         this.browser = null;
-        this.authenticatedContext = null;
+        this.authenticatedContexts.clear();
       });
     }
     return this.browser;

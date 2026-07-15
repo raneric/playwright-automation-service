@@ -24,7 +24,10 @@ async function main(): Promise<void> {
     pretty: config.logPretty,
   });
 
-  logger.info({ env: config.nodeEnv }, 'Starting Playwright Automation Service');
+  logger.info(
+    { env: config.nodeEnv },
+    'Starting Playwright Automation Service'
+  );
   logger.debug({ config: redactConfig(config) }, 'Loaded configuration');
 
   const container = buildContainer(config, logger);
@@ -32,8 +35,8 @@ async function main(): Promise<void> {
 
   const server = app.listen(config.port, () => {
     logger.info(
-      { port: config.port, apiKeyEnabled: Boolean(config.saas.apiKey) },
-      'Server listening',
+      { port: config.port, platforms: Object.keys(config.platforms) },
+      'Server listening'
     );
   });
 
@@ -43,7 +46,8 @@ async function main(): Promise<void> {
 
     server.close(async () => {
       // 'browserSession' is the container registration key for BrowserManager
-      const browserManager = container.resolve<BrowserManager>('browserSession');
+      const browserManager =
+        container.resolve<BrowserManager>('browserSession');
       await browserManager.shutdown();
       logger.info('Shutdown complete');
       process.exit(0);

@@ -1,6 +1,12 @@
-import { createContainer, asClass, asValue, InjectionMode, AwilixContainer } from 'awilix';
+import {
+  createContainer,
+  asClass,
+  asValue,
+  InjectionMode,
+  AwilixContainer,
+} from 'awilix';
 import { Logger } from '../shared/logger';
-import { AppConfig } from '../infrastructure/config';
+import { AppConfig, PlatformConfig } from '../infrastructure/config';
 import { BrowserManager } from '../infrastructure/playwright/BrowserManager';
 import {
   PlaywrightClaimAutomation,
@@ -14,19 +20,36 @@ import { SearchProductsUseCase } from '../core/usecases/SearchProductsUseCase';
 import { ClaimController } from '../infrastructure/http/controllers/ClaimController';
 import { OrderController } from '../infrastructure/http/controllers/OrderController';
 import { SearchController } from '../infrastructure/http/controllers/SearchController';
+import {
+  IClaimAutomationPort,
+  IOrderAutomationPort,
+  ISearchAutomationPort,
+} from '../core/ports';
 
 /**
  * Build the Awilix DI container.
  *
  * Registration order:
  *  1. Values (config, logger)
- *  2. Infrastructure (browser, automation adapters)
- *  3. Application (use cases)
- *  4. Presentation (controllers)
+ *  2. Helper: resolve a PlatformConfig by name
+ *  3. Infrastructure (browser, per-platform automation factories)
+ *  4. Application (use cases with per-platform factory injection)
+ *  5. Presentation (controllers)
  *
- * All dependencies are resolved by the container — no manual wiring.
+ * Multi-platform design:
+ *  - Automation classes accept PlatformConfig (not AppConfig)
+ *  - Use cases accept factory functions: (platform: string) => IPort
+ *  - BrowserManager maintains one authenticated context per platform
+ *
+ * IMPORTANT: Factory functions are registered with asValue(), NOT asFunction().
+ * asFunction() in CLASSIC mode would try to resolve the parameter names
+ * (e.g. "platformName") from the container, which fails. asValue() stores
+ * the function as a plain value — callers invoke it with their own arguments.
  */
-export function buildContainer(config: AppConfig, logger: Logger): AwilixContainer {
+export function buildContainer(
+  config: AppConfig,
+  logger: Logger
+): AwilixContainer {
   const container = createContainer({
     injectionMode: InjectionMode.CLASSIC,
   });
@@ -37,20 +60,61 @@ export function buildContainer(config: AppConfig, logger: Logger): AwilixContain
     logger: asValue(logger),
   });
 
+  // ── Platform resolver ────────────────────────────────────────
+  // Returns a PlatformConfig by name, or throws if unknown.
+  // Registered as a value so callers invoke it with their own platformName arg.
+  const getPlatform = (platformName: string): PlatformConfig => {
+    const platform = config.platforms[platformName];
+    if (!platform) {
+      throw new Error(
+        `Unknown platform "${platformName}". Known: ${Object.keys(
+          config.platforms
+        ).join(', ')}`
+      );
+    }
+    return platform;
+  };
+
   // ── Infrastructure ───────────────────────────────────────────
+  // Per-platform factory functions — registered as values so Awilix
+  // does NOT try to resolve their parameter names from the container.
+
+  const getLoginWorkflow = (platformName: string): PlaywrightLoginWorkflow => {
+    const platform = getPlatform(platformName);
+    return new PlaywrightLoginWorkflow(platform, logger);
+  };
+
+  const getClaimAutomation = (platformName: string): IClaimAutomationPort => {
+    const platform = getPlatform(platformName);
+    return new PlaywrightClaimAutomation(platform, logger);
+  };
+
+  const getOrderAutomation = (platformName: string): IOrderAutomationPort => {
+    const platform = getPlatform(platformName);
+    return new PlaywrightOrderAutomation(platform, logger);
+  };
+
+  const getSearchAutomation = (platformName: string): ISearchAutomationPort => {
+    const platform = getPlatform(platformName);
+    return new PlaywrightSearchAutomation(platform, logger);
+  };
+
   container.register({
+    getPlatform: asValue(getPlatform),
     browserSession: asClass(BrowserManager, { lifetime: 'SINGLETON' }),
-    loginWorkflow: asClass(PlaywrightLoginWorkflow, { lifetime: 'SINGLETON' }),
-    claimAutomation: asClass(PlaywrightClaimAutomation, { lifetime: 'SINGLETON' }),
-    orderAutomation: asClass(PlaywrightOrderAutomation, { lifetime: 'SINGLETON' }),
-    searchAutomation: asClass(PlaywrightSearchAutomation, { lifetime: 'SINGLETON' }),
+    getLoginWorkflow: asValue(getLoginWorkflow),
+    getClaimAutomation: asValue(getClaimAutomation),
+    getOrderAutomation: asValue(getOrderAutomation),
+    getSearchAutomation: asValue(getSearchAutomation),
   });
 
   // ── Application ──────────────────────────────────────────────
   container.register({
     createClaimUseCase: asClass(CreateClaimUseCase, { lifetime: 'SINGLETON' }),
     createOrderUseCase: asClass(CreateOrderUseCase, { lifetime: 'SINGLETON' }),
-    searchProductsUseCase: asClass(SearchProductsUseCase, { lifetime: 'SINGLETON' }),
+    searchProductsUseCase: asClass(SearchProductsUseCase, {
+      lifetime: 'SINGLETON',
+    }),
   });
 
   // ── Controllers ──────────────────────────────────────────────
