@@ -48,6 +48,17 @@ export abstract class BasePage {
     await this.page.click(selector);
   }
 
+  /** Click an element identified by a CSS selector */
+  async clickBySelector(selector: string): Promise<void> {
+    const test = this.page.locator(selector)
+    await test.click();
+  }
+
+  /** Click an element by class name */
+  async clickByClass(className: string): Promise<void> {
+    await this.page.locator(`.${className}`).click({button:'left'});
+  }
+
   /** Get text content of an element by data-testid */
   async textByTestId(testId: string): Promise<string> {
     const selector = `[data-testid="${testId}"]`;

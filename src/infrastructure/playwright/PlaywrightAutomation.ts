@@ -134,16 +134,8 @@ export class PlaywrightSearchAutomation implements ISearchAutomationPort {
         allResults.push(...products);
       }
 
-      // Deduplicate by itemCode + productName
-      const unique = allResults.filter(
-        (r, i, arr) =>
-          arr.findIndex(
-            (x) => x.itemCode === r.itemCode && x.productName === r.productName,
-          ) === i,
-      );
-
-      this.logger.info({ count: unique.length }, 'Search complete');
-      return Result.ok(unique);
+      this.logger.info({ count: allResults.length }, 'Search complete');
+      return Result.ok(allResults);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       return Result.fail(new Error(message));

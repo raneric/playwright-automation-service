@@ -22,7 +22,7 @@ export class OrderListPage extends BasePage {
    * Waits for the table to settle rather than using a fixed timeout.
    */
   async clearSearch(): Promise<void> {
-    const clearBtn = await this.page.$('[data-testid="po-list-search-clear"]');
+    const clearBtn = await this.page.$('.po-list-search-clear');
     if (clearBtn) {
       await clearBtn.click();
       // Wait for the table to re-render in its cleared state
@@ -41,7 +41,7 @@ export class OrderListPage extends BasePage {
   async search(term: string): Promise<void> {
     await this.page.fill('[data-testid="po-list-search"]', term);
     // Use data-testid selector — consistent with the rest of the codebase
-    await this.clickByTestId('po-list-search-btn');
+    await this.clickByClass('po-list-search-btn');
 
     // Wait for loading to start (may be brief or absent on fast connections)
     const loadingStarted = await this.page
@@ -76,27 +76,45 @@ export class OrderListPage extends BasePage {
    * Extract all visible product rows from the table in a single browser
    * evaluation — avoids N+1 round-trips for large tables.
    */
-  async extractProducts(): Promise<ProductResult[]> {
-    return this.page.$$eval('tr[data-testid^="po-list-row-"]', (rows) =>
-      rows
-        .map((row) => {
-          const testId = row.getAttribute('data-testid') ?? '';
-          const index = testId.replace('po-list-row-', '');
-          const get = (field: string): string =>
-            row
-              .querySelector(`[data-testid="po-list-row-${index}-${field}"]`)
-              ?.textContent?.trim() ?? '';
+   /** Extract all visible product rows from the table */
+     async extractProducts(): Promise<ProductResult[]> {
+       const rows = await this.page.$$('tr[data-testid^="po-list-row-"]');
+       const results: ProductResult[] = [];
 
-          return {
-            itemCode: get('item-code'),
-            productName: get('product'),
-            vendor: get('vendor'),
-            customerName: get('customer'),
-            orderCode: get('order-code'),
-            existsInSystem: true,
-          };
-        })
-        .filter((r) => r.itemCode !== '' || r.productName !== ''),
-    );
-  }
+       for (const row of rows) {
+         const testId = await row.getAttribute('data-testid');
+         if (!testId) continue;
+
+         const index = testId.replace('po-list-row-', '');
+
+         const itemCode = await this.page
+           .textContent(`[data-testid="po-list-row-${index}-item-code"]`)
+           .then((t) => t?.trim() || '');
+         const productName = await this.page
+           .textContent(`[data-testid="po-list-row-${index}-product"]`)
+           .then((t) => t?.trim() || '');
+         const vendor = await this.page
+           .textContent(`[data-testid="po-list-row-${index}-vendor"]`)
+           .then((t) => t?.trim() || '');
+         const customerName = await this.page
+           .textContent(`[data-testid="po-list-row-${index}-customer"]`)
+           .then((t) => t?.trim() || '');
+         const orderCode = await this.page
+           .textContent(`[data-testid="po-list-row-${index}-order-code"]`)
+           .then((t) => t?.trim() || '');
+
+         if (itemCode || productName) {
+           results.push({
+             itemCode,
+             productName,
+             vendor,
+             customerName,
+             orderCode,
+             existsInSystem: true,
+           });
+         }
+       }
+
+       return results;
+     }
 }
