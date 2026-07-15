@@ -1,9 +1,4 @@
-import {
-  chromium,
-  Browser,
-  BrowserContext,
-  Page,
-} from 'playwright';
+import { chromium, Browser, BrowserContext, Page } from 'playwright';
 import { Logger } from '../../shared/logger';
 import { AppConfig } from '../config';
 import { IBrowserSession } from '../../core/ports';
@@ -54,7 +49,7 @@ export class BrowserManager implements IBrowserSession {
   constructor(
     private readonly config: AppConfig,
     private readonly logger: Logger,
-    private readonly loginWorkflow: PlaywrightLoginWorkflow,
+    private readonly loginWorkflow: PlaywrightLoginWorkflow
   ) {
     this.semaphore = new Semaphore(config.browser.maxConcurrentContexts);
   }
@@ -91,7 +86,10 @@ export class BrowserManager implements IBrowserSession {
    * Note: The semaphore is NOT acquired for the authenticated context because
    * it is a shared singleton — it doesn't consume an additional slot per request.
    */
-  async createAuthenticatedSession(): Promise<{ context: BrowserContext; page: Page }> {
+  async createAuthenticatedSession(): Promise<{
+    context: BrowserContext;
+    page: Page;
+  }> {
     if (this.authenticatedContext) {
       this.logger.debug('Reusing authenticated browser context');
       const page = await this.authenticatedContext.newPage();
@@ -125,7 +123,9 @@ export class BrowserManager implements IBrowserSession {
     }
 
     if (ctx === this.authenticatedContext) {
-      this.logger.debug('Released page from authenticated context (context retained)');
+      this.logger.debug(
+        'Released page from authenticated context (context retained)'
+      );
       return;
     }
 
@@ -163,7 +163,10 @@ export class BrowserManager implements IBrowserSession {
 
   private async getBrowser(): Promise<Browser> {
     if (!this.browser || !this.browser.isConnected()) {
-      this.logger.info({ headless: this.config.browser.headless }, 'Launching browser');
+      this.logger.info(
+        { headless: this.config.browser.headless },
+        'Launching browser'
+      );
 
       this.browser = await chromium.launch({
         headless: this.config.browser.headless,
@@ -172,7 +175,9 @@ export class BrowserManager implements IBrowserSession {
       });
 
       this.browser.on('disconnected', () => {
-        this.logger.warn('Browser disconnected unexpectedly — clearing cached session');
+        this.logger.warn(
+          'Browser disconnected unexpectedly — clearing cached session'
+        );
         this.browser = null;
         this.authenticatedContext = null;
       });

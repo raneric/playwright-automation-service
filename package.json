@@ -6,7 +6,7 @@
   "type": "commonjs",
   "scripts": {
     "dev": "tsx watch --inspect=0.0.0.0:9229 src/app/server.ts",
-    "build": "tsc",
+    "build": "tsc -p tsconfig.build.json",
     "start": "node dist/app/server.js",
     "lint": "eslint 'src/**/*.ts'",
     "test": "jest --passWithNoTests",

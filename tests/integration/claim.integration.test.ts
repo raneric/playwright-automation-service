@@ -17,7 +17,7 @@ import { loadConfig } from '../../src/infrastructure/config';
 import { createLogger } from '../../src/shared/logger';
 import { Result } from '../../src/shared/Result';
 import { beforeEach, describe, it } from 'node:test';
-import { expect } from 'playwright/test';
+import { expect } from '@jest/globals';
 
 // ── Mock objects ──────────────────────────────────────────────────────────────
 
@@ -43,8 +43,12 @@ const mockPage = {
 mockContext.newPage.mockResolvedValue(mockPage);
 
 const mockBrowserSession = {
-  createSession: jest.fn().mockResolvedValue({ context: mockContext, page: mockPage }),
-  createAuthenticatedSession: jest.fn().mockResolvedValue({ context: mockContext, page: mockPage }),
+  createSession: jest
+    .fn()
+    .mockResolvedValue({ context: mockContext, page: mockPage }),
+  createAuthenticatedSession: jest
+    .fn()
+    .mockResolvedValue({ context: mockContext, page: mockPage }),
   releaseSession: jest.fn().mockResolvedValue(null),
   shutdown: jest.fn().mockResolvedValue(null),
 };
@@ -96,7 +100,12 @@ const validClaimPayload = {
     name: 'Acme Corp',
     organization: 'Engineering',
     department: 'QA',
-    address: { street: '123 Main St', city: 'Springfield', state: 'IL', postalCode: '62701' },
+    address: {
+      street: '123 Main St',
+      city: 'Springfield',
+      state: 'IL',
+      postalCode: '62701',
+    },
     phone: '555-1234',
     email: 'acme@example.com',
   },
@@ -144,16 +153,15 @@ describe('POST /api/claim', () => {
 
     expect(res.body.success).toBe(true);
     expect(res.body.data.claimId).toBe('CC-001');
-    expect(mockBrowserSession.createAuthenticatedSession).toHaveBeenCalledTimes(1);
+    expect(mockBrowserSession.createAuthenticatedSession).toHaveBeenCalledTimes(
+      1
+    );
     expect(mockClaimAutomation.createClaim).toHaveBeenCalledTimes(1);
     expect(mockBrowserSession.releaseSession).toHaveBeenCalledTimes(1);
   });
 
   it('returns 400 when body is empty', async () => {
-    const res = await request(app)
-      .post('/api/claim')
-      .send({})
-      .expect(400);
+    const res = await request(app).post('/api/claim').send({}).expect(400);
 
     expect(res.body.success).toBe(false);
     expect(res.body.error.code).toBe('VALIDATION_ERROR');
@@ -187,7 +195,7 @@ describe('POST /api/claim', () => {
 
   it('returns 422 when automation port returns a failure', async () => {
     mockClaimAutomation.createClaim.mockResolvedValue(
-      Result.fail(new Error('Form validation failed: missing required field')),
+      Result.fail(new Error('Form validation failed: missing required field'))
     );
 
     const res = await request(app)

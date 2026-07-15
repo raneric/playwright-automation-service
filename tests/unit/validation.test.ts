@@ -8,8 +8,6 @@ describe('ClaimInputDTO validation', () => {
       dateOfRequest: '2026-01-15',
       requestor: 'John Doe',
     },
-    orderCode: 'ORD-001',
-    orderDate: '2026-01-10',
     customer: {
       name: 'Acme Corp',
       organization: 'Engineering',
@@ -24,13 +22,15 @@ describe('ClaimInputDTO validation', () => {
       email: 'acme@example.com',
     },
     issues: 'Product arrived damaged',
-    productLines: [
+    products: [
       {
         lineNumber: 1,
         documentNumber: 'DOC-001',
         productName: 'Widget A',
         itemCode: 'W-001',
         lotNumber: 'L-001',
+        orderCode: 'ORD-001',
+        orderDate: '2026-01-10',
         quantityOrdered: 100,
         quantityBilled: 100,
         quantityReceived: 95,
