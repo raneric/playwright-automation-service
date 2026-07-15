@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import rateLimit from 'express-rate-limit';
-import { Logger } from '../infrastructure/logger';
-import { AppError } from '../shared/errors';
+import { Logger } from '../../../shared/logger';
+import { AppError } from '../../../shared/errors';
 
 // ── Error Handler ─────────────────────────────────────────────────────────────
 

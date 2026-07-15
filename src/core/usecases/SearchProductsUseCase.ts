@@ -1,9 +1,9 @@
 import { SearchInputDTO } from '../dto';
 import { ISearchAutomationPort, IBrowserSession } from '../ports';
 import { Result } from '../../shared/Result';
-import { Logger } from '../../infrastructure/logger';
+import { Logger } from '../../shared/logger';
 import { AutomationError } from '../../shared/errors';
-import { ProductResult } from '../../domain/entities';
+import { ProductResult } from '../domain/entities';
 
 export interface SearchProductsOutput {
   products: ProductResult[];

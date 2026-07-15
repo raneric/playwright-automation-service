@@ -1,20 +1,20 @@
 import express, { Express } from 'express';
 import { AwilixContainer } from 'awilix';
-import { Logger } from '../infrastructure/logger';
+import { Logger } from '../shared/logger';
 import { AppConfig } from '../infrastructure/config';
 import {
   createClaimRoutes,
   createOrderRoutes,
   createSearchRoutes,
   createHealthRoutes,
-} from '../routes';
+} from '../infrastructure/http/routes';
 import {
   errorHandler,
   requestLogger,
   requestTimeout,
   apiKeyAuth,
   createRateLimiter,
-} from '../middleware';
+} from '../infrastructure/http/middleware';
 import { DEFAULT_TIMEOUTS } from '../shared/constants';
 
 /**

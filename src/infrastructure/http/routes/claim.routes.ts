@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { ClaimController } from '../controllers';
 import { validate } from '../validation';
-import { claimInputSchema } from '../application/dto';
+import { claimInputSchema } from '../../../core/dto';
 
 export function createClaimRoutes(controller: ClaimController): Router {
   const router = Router();

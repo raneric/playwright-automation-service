@@ -4,9 +4,9 @@ import {
   BrowserContext,
   Page,
 } from 'playwright';
-import { Logger } from '../logger';
+import { Logger } from '../../shared/logger';
 import { AppConfig } from '../config';
-import { IBrowserSession } from '../../application/ports';
+import { IBrowserSession } from '../../core/ports';
 import { PlaywrightLoginWorkflow } from './PlaywrightAutomation';
 
 /**

@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
-import { CreateClaimUseCase } from '../application/usecases';
-import { ClaimInputDTO } from '../application/dto';
-import { Logger } from '../infrastructure/logger';
+import { CreateClaimUseCase } from '../../../core/usecases';
+import { Logger } from '../../../shared/logger';
+import { ClaimInputDTO } from '../../../core/dto';
+
 
 /**
  * Controller for claim-related endpoints.

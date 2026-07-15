@@ -1,7 +1,7 @@
 import { Page } from 'playwright';
-import { Logger } from '../../logger';
+import { Logger } from '../../../shared/logger';
 import { BasePage } from './BasePage';
-import { ProductResult } from '../../../domain/entities';
+import { ProductResult } from '../../../core/domain/entities';
 import { DEFAULT_TIMEOUTS } from '../../../shared/constants';
 
 /**

@@ -1,5 +1,5 @@
 import { createContainer, asClass, asValue, InjectionMode, AwilixContainer } from 'awilix';
-import { Logger } from '../infrastructure/logger';
+import { Logger } from '../shared/logger';
 import { AppConfig } from '../infrastructure/config';
 import { BrowserManager } from '../infrastructure/playwright/BrowserManager';
 import {
@@ -8,12 +8,12 @@ import {
   PlaywrightSearchAutomation,
   PlaywrightLoginWorkflow,
 } from '../infrastructure/playwright/PlaywrightAutomation';
-import { CreateClaimUseCase } from '../application/usecases/CreateClaimUseCase';
-import { CreateOrderUseCase } from '../application/usecases/CreateOrderUseCase';
-import { SearchProductsUseCase } from '../application/usecases/SearchProductsUseCase';
-import { ClaimController } from '../controllers/ClaimController';
-import { OrderController } from '../controllers/OrderController';
-import { SearchController } from '../controllers/SearchController';
+import { CreateClaimUseCase } from '../core/usecases/CreateClaimUseCase';
+import { CreateOrderUseCase } from '../core/usecases/CreateOrderUseCase';
+import { SearchProductsUseCase } from '../core/usecases/SearchProductsUseCase';
+import { ClaimController } from '../infrastructure/http/controllers/ClaimController';
+import { OrderController } from '../infrastructure/http/controllers/OrderController';
+import { SearchController } from '../infrastructure/http/controllers/SearchController';
 
 /**
  * Build the Awilix DI container.

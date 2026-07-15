@@ -1,5 +1,6 @@
-import { describe } from 'node:test';
-import { claimInputSchema, ClaimInputDTO } from '../../src/application/dto';
+import { describe, it } from 'node:test';
+import { expect } from 'playwright/test';
+import { ClaimInputDTO, claimInputSchema } from '../../src/core/dto';
 
 describe('ClaimInputDTO validation', () => {
   const validInput: ClaimInputDTO = {

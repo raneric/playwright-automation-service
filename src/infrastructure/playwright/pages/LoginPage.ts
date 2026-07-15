@@ -1,5 +1,5 @@
 import { Page } from 'playwright';
-import { Logger } from '../../logger';
+import { Logger } from '../../../shared/logger';
 import { BasePage } from './BasePage';
 import { LoginSelectors } from '../selectors/login';
 

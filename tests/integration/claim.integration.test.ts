@@ -14,8 +14,10 @@ import { asValue } from 'awilix';
 import { createApp } from '../../src/app/express';
 import { buildContainer } from '../../src/app/container';
 import { loadConfig } from '../../src/infrastructure/config';
-import { createLogger } from '../../src/infrastructure/logger';
+import { createLogger } from '../../src/shared/logger';
 import { Result } from '../../src/shared/Result';
+import { beforeEach, describe, it } from 'node:test';
+import { expect } from 'playwright/test';
 
 // ── Mock objects ──────────────────────────────────────────────────────────────
 

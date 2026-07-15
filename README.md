@@ -18,15 +18,16 @@ This service exposes HTTP endpoints that, when called, launch or reuse a Playwri
 
 | Layer | Directory | Responsibility |
 |---|---|---|
-| **Routes** | `src/routes/` | Define HTTP method, path, validation middleware, and controller binding |
-| **Validation** | `src/validation/` | Zod schema validation middleware — rejects malformed requests with 400 |
-| **Controllers** | `src/controllers/` | Thin request handlers — extract data from request, delegate to use case, format response |
+| **Routes** | `src/http/routes/` | Define HTTP method, path, validation middleware, and controller binding |
+| **Validation** | `src/http/validation/` | Zod schema validation middleware — rejects malformed requests with 400 |
+| **Controllers** | `src/http/controllers/` | Thin request handlers — extract data from request, delegate to use case, format response |
+| **Middleware** | `src/http/middleware/` | Error handler, request logger, timeout, API key auth, rate limiter |
 | **Use Cases** | `src/application/usecases/` | Application business logic — orchestrate domain services and infrastructure ports |
 | **DTOs** | `src/application/dto/` | Zod-validated request/response schemas — the API contract |
 | **Ports** | `src/application/ports/` + `src/domain/ports/` | Interfaces that decouple application from infrastructure |
 | **Domain** | `src/domain/` | Core business entities and value objects — zero external dependencies |
-| **Infrastructure** | `src/infrastructure/` | Playwright adapters, browser management, config, logging |
-| **Shared** | `src/shared/` | Cross-cutting utilities — `Result` type, error classes, constants |
+| **Infrastructure** | `src/infrastructure/` | Playwright adapters, browser management, config |
+| **Shared** | `src/shared/` | Cross-cutting utilities — `Result` type, error classes, constants, logger |
 
 ## Folder Structure
 
@@ -41,7 +42,8 @@ src/
 │   ├── Result.ts                 # Result<T,E> discriminated union
 │   ├── errors/                   # Custom exception hierarchy
 │   │   └── AppError.ts           # Base + 8 typed subclasses
-│   └── constants/                # Page paths, timeouts, retry policies
+│   ├── constants/                # Page paths, timeouts, retry policies
+│   └── logger/                   # Pino structured logger
 │
 ├── domain/                       # Inner layer — business entities & ports
 │   ├── entities/                 # CustomerClaim, PurchaseOrder, ProductResult, etc.
@@ -52,12 +54,10 @@ src/
 │   ├── usecases/                 # CreateClaimUseCase, CreateOrderUseCase, SearchProductsUseCase
 │   └── ports/                    # IClaimAutomationPort, IOrderAutomationPort, etc.
 │
-├── infrastructure/               # Outer layer — Playwright, config, logging
+├── infrastructure/               # Outer layer — Playwright, config
 │   ├── config/
 │   │   ├── AppConfig.ts          # Typed config from env vars
 │   │   └── form/                 # Declarative form definitions
-│   ├── logger/
-│   │   └── logger.ts             # Pino structured logger
 │   └── playwright/
 │       ├── BrowserManager.ts     # Browser lifecycle, context pooling, auto-login
 │       ├── PlaywrightAutomation.ts # Adapters implementing app ports
@@ -69,10 +69,11 @@ src/
 │       ├── selectors/            # Centralized data-testid constants
 │       └── utils/                # gotoWithRetry, retry helpers
 │
-├── controllers/                  # Express request handlers (thin)
-├── routes/                       # Route definitions + validation middleware
-├── middleware/                    # Error handler, request logger, timeout, API key auth
-└── validation/                   # Zod validation middleware factory
+├── http/                          # HTTP layer — Express routes, controllers, middleware
+│   ├── controllers/               # Express request handlers (thin)
+│   ├── routes/                    # Route definitions + validation middleware
+│   ├── middleware/                 # Error handler, request logger, timeout, API key auth
+│   └── validation/                # Zod validation middleware factory
 
 tests/
 ├── unit/                         # Fast, no I/O — pure logic tests
@@ -91,7 +92,7 @@ tests/
 | **Strategy Pattern** | `FormConfig` declarative definitions | Same `FormPage` class fills any form. New form = new config, not new code. |
 | **Result Monad** | `shared/Result.ts` | Forces explicit success/failure handling. No uncaught exceptions from use cases. |
 | **Factory** | `createApp()`, `buildContainer()`, route factories | Construction logic isolated and testable. |
-| **Middleware Chain** | `middleware/` | Validation → auth → timeout → handler → error handler. Composable concerns. |
+| **Middleware Chain** | `http/middleware/` | Validation → auth → timeout → handler → error handler. Composable concerns. |
 
 ## API Endpoints
 
@@ -361,7 +362,8 @@ npm run test:playwright
 ## Scalability Considerations
 
 - **Multiple SaaS providers**: Add new `FormConfig` + `PlaywrightXxxAutomation` adapter. Register in container. Zero changes to use cases.
-- **Queue-based execution**: Wrap `UseCase.execute()` in a BullMQ job processor. Use cases are already async and stateless.
+- **
+-based execution**: Wrap `UseCase.execute()` in a BullMQ job processor. Use cases are already async and stateless.
 - **Browser pooling**: `BrowserManager` tracks active contexts. Extend with a semaphore for concurrency limits.
 - **Scheduled automations**: Add `node-cron` or Bull scheduler calling use cases directly (bypass HTTP).
 - **Session reuse**: `BrowserManager.createAuthenticatedSession()` already reuses the authenticated context.

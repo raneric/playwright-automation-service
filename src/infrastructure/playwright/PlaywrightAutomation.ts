@@ -1,5 +1,5 @@
 import { Page } from 'playwright';
-import { Logger } from '../logger';
+import { Logger } from '../../shared/logger';
 import { AppConfig } from '../config';
 import { BrowserManager } from './BrowserManager';
 import { LoginPage } from './pages/LoginPage';
@@ -13,8 +13,8 @@ import {
   IClaimAutomationPort,
   IOrderAutomationPort,
   ISearchAutomationPort,
-} from '../../application/ports';
-import { ProductResult } from '../../domain/entities';
+} from '../../core/ports';
+import { ProductResult } from '../../core/domain/entities';
 
 /**
  * Playwright adapter implementing the Claim automation port.

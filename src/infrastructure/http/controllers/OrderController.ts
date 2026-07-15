@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
-import { CreateOrderUseCase } from '../application/usecases';
-import { OrderInputDTO } from '../application/dto';
-import { Logger } from '../infrastructure/logger';
+import { CreateOrderUseCase } from '../../../core/usecases';
+import { OrderInputDTO } from '../../../core/dto';
+import { Logger } from '../../../shared/logger';
 
 export class OrderController {
   constructor(

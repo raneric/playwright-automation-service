@@ -1,7 +1,7 @@
 import { OrderInputDTO } from '../dto';
 import { IOrderAutomationPort, IBrowserSession } from '../ports';
 import { Result } from '../../shared/Result';
-import { Logger } from '../../infrastructure/logger';
+import { Logger } from '../../shared/logger';
 import { AutomationError } from '../../shared/errors';
 
 /**

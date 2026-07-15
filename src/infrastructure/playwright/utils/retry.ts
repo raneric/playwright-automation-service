@@ -1,5 +1,5 @@
 import { Page } from 'playwright';
-import { Logger } from '../../logger';
+import { Logger } from '../../../shared/logger';
 import { RETRY_POLICY, DEFAULT_TIMEOUTS } from '../../../shared/constants';
 
 /**

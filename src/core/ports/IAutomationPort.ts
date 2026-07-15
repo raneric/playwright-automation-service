@@ -1,6 +1,6 @@
 import { Page } from 'playwright';
 import { Result } from '../../shared/Result';
-import { ProductResult } from '../../domain/entities';
+import { ProductResult } from '../domain/entities';
 
 /**
  * Application-layer ports for automation.
