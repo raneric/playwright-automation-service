@@ -30,7 +30,7 @@ export class CreateOrderUseCase {
       this.logger.info({ orderId: result.value }, 'CreateOrderUseCase: completed');
       return Result.ok({ orderId: result.value });
     } finally {
-      await this.browserSession.releaseSession(page.context());
+      await this.browserSession.releaseSession(page.context(), page);
     }
   }
 

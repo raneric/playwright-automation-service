@@ -44,7 +44,7 @@ export class SearchProductsUseCase {
 
       return Result.ok({ products: result.value });
     } finally {
-      await this.browserSession.releaseSession(page.context());
+      await this.browserSession.releaseSession(page.context(), page);
     }
   }
 }

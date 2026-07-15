@@ -109,14 +109,23 @@ export class BrowserManager implements IBrowserSession {
 
   /**
    * Release a session.
-   * - Authenticated context: closes only the page; the context is kept alive for reuse.
+   * - Authenticated context: closes the page; the context is kept alive for reuse.
    * - Any other context: fully closed and removed from the active set.
    */
-  async releaseSession(context: unknown): Promise<void> {
+  async releaseSession(context: unknown, page?: unknown): Promise<void> {
     const ctx = context as BrowserContext;
 
+    // Always close the page first to free memory
+    if (page) {
+      try {
+        await (page as Page).close();
+      } catch {
+        // Page may have already been closed
+      }
+    }
+
     if (ctx === this.authenticatedContext) {
-      this.logger.debug('Releasing page from authenticated context (context retained)');
+      this.logger.debug('Released page from authenticated context (context retained)');
       return;
     }
 

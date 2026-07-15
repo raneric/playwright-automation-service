@@ -18,15 +18,15 @@ This service exposes HTTP endpoints that, when called, launch or reuse a Playwri
 
 | Layer | Directory | Responsibility |
 |---|---|---|
-| **Routes** | `src/http/routes/` | Define HTTP method, path, validation middleware, and controller binding |
-| **Validation** | `src/http/validation/` | Zod schema validation middleware — rejects malformed requests with 400 |
-| **Controllers** | `src/http/controllers/` | Thin request handlers — extract data from request, delegate to use case, format response |
-| **Middleware** | `src/http/middleware/` | Error handler, request logger, timeout, API key auth, rate limiter |
-| **Use Cases** | `src/application/usecases/` | Application business logic — orchestrate domain services and infrastructure ports |
-| **DTOs** | `src/application/dto/` | Zod-validated request/response schemas — the API contract |
-| **Ports** | `src/application/ports/` + `src/domain/ports/` | Interfaces that decouple application from infrastructure |
-| **Domain** | `src/domain/` | Core business entities and value objects — zero external dependencies |
-| **Infrastructure** | `src/infrastructure/` | Playwright adapters, browser management, config |
+| **Routes** | `src/infrastructure/http/routes/` | Define HTTP method, path, validation middleware, and controller binding |
+| **Validation** | `src/infrastructure/http/validation/` | Zod schema validation middleware — rejects malformed requests with 400 |
+| **Controllers** | `src/infrastructure/http/controllers/` | Thin request handlers — extract data from request, delegate to use case, format response |
+| **Middleware** | `src/infrastructure/http/middleware/` | Error handler, request logger, timeout, API key auth, rate limiter |
+| **Use Cases** | `src/core/usecases/` | Application business logic — orchestrate domain services and infrastructure ports |
+| **DTOs** | `src/core/dto/` | Zod-validated request/response schemas — the API contract |
+| **Ports** | `src/core/ports/` | Interfaces that decouple core from infrastructure |
+| **Domain** | `src/core/domain/` | Core business entities and value objects — zero external dependencies |
+| **Infrastructure** | `src/infrastructure/` | Playwright adapters, browser management, HTTP layer, config |
 | **Shared** | `src/shared/` | Cross-cutting utilities — `Result` type, error classes, constants, logger |
 
 ## Folder Structure
@@ -43,24 +43,31 @@ src/
 │   ├── errors/                   # Custom exception hierarchy
 │   │   └── AppError.ts           # Base + 8 typed subclasses
 │   ├── constants/                # Page paths, timeouts, retry policies
-│   └── logger/                   # Pino structured logger
+│   ├── logger/                   # Pino structured logger
+│   └── types/                    # Shared TypeScript type definitions
 │
-├── domain/                       # Inner layer — business entities & ports
-│   ├── entities/                 # CustomerClaim, PurchaseOrder, ProductResult, etc.
-│   └── ports/                    # IBrowserSession, ILoginAutomation, etc.
-│
-├── application/                  # Use cases & DTOs — depends only on domain
+├── core/                         # Inner layer — domain, use cases, DTOs, ports
+│   ├── domain/
+│   │   └── entities/             # CustomerClaim, PurchaseOrder, ProductResult, etc.
 │   ├── dto/                      # Zod-validated request schemas
+│   │   ├── ClaimDTO.ts
+│   │   ├── OrderDTO.ts
+│   │   └── SearchDTO.ts
 │   ├── usecases/                 # CreateClaimUseCase, CreateOrderUseCase, SearchProductsUseCase
-│   └── ports/                    # IClaimAutomationPort, IOrderAutomationPort, etc.
+│   └── ports/                    # IAutomationPort — decouples core from infrastructure
 │
-├── infrastructure/               # Outer layer — Playwright, config
+├── infrastructure/               # Outer layer — Playwright, HTTP, config
 │   ├── config/
 │   │   ├── AppConfig.ts          # Typed config from env vars
 │   │   └── form/                 # Declarative form definitions
+│   ├── http/                     # Express routes, controllers, middleware
+│   │   ├── controllers/          # Express request handlers (thin)
+│   │   ├── routes/               # Route definitions + validation middleware
+│   │   ├── middleware/            # Error handler, request logger, timeout, API key auth
+│   │   └── validation/           # Zod validation middleware factory
 │   └── playwright/
 │       ├── BrowserManager.ts     # Browser lifecycle, context pooling, auto-login
-│       ├── PlaywrightAutomation.ts # Adapters implementing app ports
+│       ├── PlaywrightAutomation.ts # Adapters implementing core ports
 │       ├── pages/                # Page Object Model
 │       │   ├── BasePage.ts       # Shared navigation/wait/fill helpers
 │       │   ├── LoginPage.ts      # Login form interactions
@@ -68,12 +75,6 @@ src/
 │       │   └── OrderListPage.ts  # Search + table extraction
 │       ├── selectors/            # Centralized data-testid constants
 │       └── utils/                # gotoWithRetry, retry helpers
-│
-├── http/                          # HTTP layer — Express routes, controllers, middleware
-│   ├── controllers/               # Express request handlers (thin)
-│   ├── routes/                    # Route definitions + validation middleware
-│   ├── middleware/                 # Error handler, request logger, timeout, API key auth
-│   └── validation/                # Zod validation middleware factory
 
 tests/
 ├── unit/                         # Fast, no I/O — pure logic tests
@@ -85,14 +86,14 @@ tests/
 
 | Pattern | Where | Why |
 |---|---|---|
-| **Clean Architecture** | `domain/` → `application/` → `infrastructure/` | Inner layers never import outer layers. Domain has zero dependencies. |
+| **Clean Architecture** | `core/` → `infrastructure/` | Inner layers never import outer layers. Core has zero dependencies. |
 | **Dependency Injection** | `app/container.ts` (Awilix) | All wiring in one place. Use cases receive interfaces, never construct dependencies. |
 | **Page Object Model (POM)** | `infrastructure/playwright/pages/` | Each SaaS page is a class. Selectors centralized. No raw `page.fill()` in workflows. |
-| **Adapter Pattern** | `PlaywrightAutomation.ts` implements ports | Application layer depends on ports, not Playwright. Swap engines without touching use cases. |
+| **Adapter Pattern** | `PlaywrightAutomation.ts` implements ports | Core layer depends on ports, not Playwright. Swap engines without touching use cases. |
 | **Strategy Pattern** | `FormConfig` declarative definitions | Same `FormPage` class fills any form. New form = new config, not new code. |
 | **Result Monad** | `shared/Result.ts` | Forces explicit success/failure handling. No uncaught exceptions from use cases. |
 | **Factory** | `createApp()`, `buildContainer()`, route factories | Construction logic isolated and testable. |
-| **Middleware Chain** | `http/middleware/` | Validation → auth → timeout → handler → error handler. Composable concerns. |
+| **Middleware Chain** | `infrastructure/http/middleware/` | Validation → auth → timeout → handler → error handler. Composable concerns. |
 
 ## API Endpoints
 

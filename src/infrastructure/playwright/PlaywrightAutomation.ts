@@ -130,8 +130,20 @@ export class PlaywrightSearchAutomation implements ISearchAutomationPort {
           continue;
         }
 
-        const products = await listPage.extractProducts();
-        allResults.push(...products);
+        // Extract results from the current page and all subsequent pages
+        let pageNum = 1;
+        do {
+          this.logger.info({ term, page: pageNum }, 'Extracting products');
+          const products = await listPage.extractProducts();
+          allResults.push(...products);
+
+          if (await listPage.hasNextPage()) {
+            await listPage.clickNext();
+            pageNum++;
+          } else {
+            break;
+          }
+        } while (true);
       }
 
       this.logger.info({ count: allResults.length }, 'Search complete');

@@ -76,45 +76,84 @@ export class OrderListPage extends BasePage {
    * Extract all visible product rows from the table in a single browser
    * evaluation — avoids N+1 round-trips for large tables.
    */
-   /** Extract all visible product rows from the table */
-     async extractProducts(): Promise<ProductResult[]> {
-       const rows = await this.page.$$('tr[data-testid^="po-list-row-"]');
-       const results: ProductResult[] = [];
+  async extractProducts(): Promise<ProductResult[]> {
+    const rows = await this.page.$$('tr[data-testid^="po-list-row-"]');
+    const results: ProductResult[] = [];
 
-       for (const row of rows) {
-         const testId = await row.getAttribute('data-testid');
-         if (!testId) continue;
+    for (const row of rows) {
+      const testId = await row.getAttribute('data-testid');
+      if (!testId) continue;
 
-         const index = testId.replace('po-list-row-', '');
+      const index = testId.replace('po-list-row-', '');
 
-         const itemCode = await this.page
-           .textContent(`[data-testid="po-list-row-${index}-item-code"]`)
-           .then((t) => t?.trim() || '');
-         const productName = await this.page
-           .textContent(`[data-testid="po-list-row-${index}-product"]`)
-           .then((t) => t?.trim() || '');
-         const vendor = await this.page
-           .textContent(`[data-testid="po-list-row-${index}-vendor"]`)
-           .then((t) => t?.trim() || '');
-         const customerName = await this.page
-           .textContent(`[data-testid="po-list-row-${index}-customer"]`)
-           .then((t) => t?.trim() || '');
-         const orderCode = await this.page
-           .textContent(`[data-testid="po-list-row-${index}-order-code"]`)
-           .then((t) => t?.trim() || '');
+      const itemCode = await this.page
+        .textContent(`[data-testid="po-list-row-${index}-item-code"]`)
+        .then((t) => t?.trim() || '');
+      const productName = await this.page
+        .textContent(`[data-testid="po-list-row-${index}-product"]`)
+        .then((t) => t?.trim() || '');
+      const vendor = await this.page
+        .textContent(`[data-testid="po-list-row-${index}-vendor"]`)
+        .then((t) => t?.trim() || '');
+      const customerName = await this.page
+        .textContent(`[data-testid="po-list-row-${index}-customer"]`)
+        .then((t) => t?.trim() || '');
+      const orderCode = await this.page
+        .textContent(`[data-testid="po-list-row-${index}-order-code"]`)
+        .then((t) => t?.trim() || '');
 
-         if (itemCode || productName) {
-           results.push({
-             itemCode,
-             productName,
-             vendor,
-             customerName,
-             orderCode,
-             existsInSystem: true,
-           });
-         }
-       }
+      if (itemCode || productName) {
+        results.push({
+          itemCode,
+          productName,
+          vendor,
+          customerName,
+          orderCode,
+          existsInSystem: true,
+        });
+      }
+    }
 
-       return results;
-     }
+    return results;
+  }
+
+  /**
+   * Check whether the "Next" pagination button is present and enabled.
+   * Returns false if the button is missing or has the `disabled` attribute.
+   */
+  async hasNextPage(): Promise<boolean> {
+    const nextBtn = this.page.locator('button[type="button"]', { hasText: 'Next' });
+    const count = await nextBtn.count();
+    if (count === 0) return false;
+    return !(await nextBtn.isDisabled());
+  }
+
+  /**
+   * Click the "Next" pagination button and wait for the table to reload.
+   */
+  async clickNext(): Promise<void> {
+    this.logger.info('Navigating to next page');
+    await this.page.locator('button[type="button"]', { hasText: 'Next' }).click();
+
+    // Wait for loading to start
+    const loadingStarted = await this.page
+      .waitForSelector('[data-testid="po-list-loading"]', {
+        state: 'visible',
+        timeout: 500,
+      })
+      .then(() => true)
+      .catch(() => false);
+
+    if (loadingStarted) {
+      await this.page.waitForSelector('[data-testid="po-list-loading"]', {
+        state: 'hidden',
+        timeout: DEFAULT_TIMEOUTS.selector,
+      });
+    } else {
+      await this.page.waitForSelector('[data-testid="po-list-table"]', {
+        state: 'visible',
+        timeout: DEFAULT_TIMEOUTS.selector,
+      });
+    }
+  }
 }

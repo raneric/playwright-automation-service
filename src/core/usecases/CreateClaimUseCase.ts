@@ -41,7 +41,7 @@ export class CreateClaimUseCase {
       this.logger.info({ claimId: result.value }, 'CreateClaimUseCase: completed');
       return Result.ok({ claimId: result.value });
     } finally {
-      await this.browserSession.releaseSession(page.context());
+      await this.browserSession.releaseSession(page.context(), page);
     }
   }
 

@@ -28,7 +28,7 @@ export interface IBrowserSession {
   createAuthenticatedSession(): Promise<{ context: unknown; page: Page }>;
 
   /** Release a session back to the pool (or close it if not reusable). */
-  releaseSession(context: unknown): Promise<void>;
+  releaseSession(context: unknown, page?: unknown): Promise<void>;
 
   /** Tear down the entire browser instance — called on graceful shutdown. */
   shutdown(): Promise<void>;
