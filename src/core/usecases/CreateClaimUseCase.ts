@@ -21,7 +21,7 @@ export class CreateClaimUseCase {
   ) {}
 
   async execute(input: ClaimInputDTO): Promise<Result<{ claimId: string }>> {
-    this.logger.info({ orderCode: input.orderCode }, 'CreateClaimUseCase: starting');
+    this.logger.info({ orderCode: input.customer }, 'CreateClaimUseCase: starting');
 
     // 1. Transform DTO → domain entity → form data
     const formData = this.toFormData(input);
@@ -51,7 +51,7 @@ export class CreateClaimUseCase {
    * internal form representation.
    */
   private toFormData(input: ClaimInputDTO): Record<string, unknown> {
-    const firstVendor = input.productLines[0]?.vendor;
+    const firstVendor = input.products[0]?.vendor;
 
     return {
       request: {
@@ -81,14 +81,14 @@ export class CreateClaimUseCase {
         zip: input.customer.address.postalCode,
       },
       issues: input.issues,
-      items: input.productLines.map((pl) => ({
+      items: input.products.map((pl) => ({
         item_code: pl.itemCode,
         quantity: pl.quantityOrdered,
         product_name: pl.productName,
-        order_code: input.orderCode,
+        order_code: pl.orderCode,
         lot_number: pl.lotNumber,
         vendor_name: pl.vendor.name,
-        order_date: input.orderDate,
+        order_date: pl.orderDate,
       })),
     };
   }

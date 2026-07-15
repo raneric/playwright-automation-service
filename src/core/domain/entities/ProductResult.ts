@@ -5,5 +5,6 @@ export interface ProductResult {
   vendor: string;
   customerName: string;
   orderCode: string;
+  orderDate: string;
   existsInSystem: boolean;
 }
