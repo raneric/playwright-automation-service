@@ -1,13 +1,12 @@
 /**
- * Application-layer ports for automation.
+ * Application-layer ports for browser session management.
  *
- * These live in the application layer (not the domain layer) because they
- * reference Playwright's `Page` type. The application layer is permitted to
- * reference infrastructure types through ports — this keeps the domain pure
- * while still allowing proper inversion of control.
+ * These ports are framework-agnostic — they use IAutomationContext
+ * instead of Playwright's Page type. This keeps the core layer
+ * decoupled from any specific browser automation framework.
  */
 
-import { Page } from 'playwright';
+import { IAutomationContext } from './IAutomationContext';
 
 // ── Browser Session ──────────────────────────────────────────────────────────
 
@@ -17,7 +16,7 @@ import { Page } from 'playwright';
  */
 export interface IBrowserSession {
   /** Obtain a fresh, unauthenticated browser context + page. */
-  createSession(): Promise<{ context: unknown; page: Page }>;
+  createSession(): Promise<{ context: unknown; page: IAutomationContext }>;
 
   /**
    * Obtain an authenticated session for a specific platform.
@@ -27,10 +26,10 @@ export interface IBrowserSession {
    */
   createAuthenticatedSession(
     platform: string
-  ): Promise<{ context: unknown; page: Page }>;
+  ): Promise<{ context: unknown; page: IAutomationContext }>;
 
   /** Release a session back to the pool (or close it if not reusable). */
-  releaseSession(context: unknown, page?: unknown): Promise<void>;
+  releaseSession(page: IAutomationContext): Promise<void>;
 
   /** Tear down the entire browser instance — called on graceful shutdown. */
   shutdown(): Promise<void>;

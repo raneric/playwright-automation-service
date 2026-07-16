@@ -20,7 +20,7 @@ export class SearchController {
         success: false,
         error: {
           code: 'AUTOMATION_ERROR',
-          message: result.error.message,
+          message: (result.error as Error).message,
         },
       });
       return;

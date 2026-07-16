@@ -1,8 +1,12 @@
 import { chromium, Browser, BrowserContext, Page } from 'playwright';
 import { Logger } from '../../shared/logger';
 import { AppConfig } from '../config';
-import { IBrowserSession } from '../../core/ports';
-import { PlaywrightLoginWorkflow } from './automation';
+import {
+  IBrowserSession,
+  IAutomationContext,
+  ILoginWorkflow,
+} from '../../core/ports';
+import { PlaywrightAutomationContext } from './PlaywrightAutomationContext';
 
 /**
  * Simple counting semaphore for capping concurrent browser context creation.
@@ -51,9 +55,7 @@ export class BrowserManager implements IBrowserSession {
     private readonly config: AppConfig,
     private readonly logger: Logger,
     /** Factory: given a platform name, returns a login workflow for that platform */
-    private readonly getLoginWorkflow: (
-      platform: string
-    ) => PlaywrightLoginWorkflow
+    private readonly getLoginWorkflow: (platform: string) => ILoginWorkflow
   ) {
     this.semaphore = new Semaphore(config.browser.maxConcurrentContexts);
   }
@@ -64,7 +66,10 @@ export class BrowserManager implements IBrowserSession {
    * Create a fresh, unauthenticated browser context + page.
    * Blocks if the concurrency limit has been reached.
    */
-  async createSession(): Promise<{ context: BrowserContext; page: Page }> {
+  async createSession(): Promise<{
+    context: BrowserContext;
+    page: IAutomationContext;
+  }> {
     await this.semaphore.acquire();
 
     try {
@@ -74,7 +79,10 @@ export class BrowserManager implements IBrowserSession {
       });
       this.activeContexts.add(context);
       const page = await context.newPage();
-      return { context, page };
+      return {
+        context,
+        page: new PlaywrightAutomationContext(page, this.logger),
+      };
     } catch (err) {
       // If context creation itself fails, release the semaphore slot immediately
       this.semaphore.release();
@@ -91,13 +99,16 @@ export class BrowserManager implements IBrowserSession {
    */
   async createAuthenticatedSession(platform: string): Promise<{
     context: BrowserContext;
-    page: Page;
+    page: IAutomationContext;
   }> {
     const existing = this.authenticatedContexts.get(platform);
     if (existing) {
       this.logger.debug({ platform }, 'Reusing authenticated browser context');
       const page = await existing.newPage();
-      return { context: existing, page };
+      return {
+        context: existing,
+        page: new PlaywrightAutomationContext(page, this.logger),
+      };
     }
 
     const { context, page } = await this.createSession();
@@ -118,16 +129,18 @@ export class BrowserManager implements IBrowserSession {
    * - Authenticated context: closes the page; the context is kept alive for reuse.
    * - Any other context: fully closed and removed from the active set.
    */
-  async releaseSession(context: unknown, page?: unknown): Promise<void> {
-    const ctx = context as BrowserContext;
+  async releaseSession(page: IAutomationContext): Promise<void> {
+    const playwrightPage =
+      page instanceof PlaywrightAutomationContext
+        ? page.getPage()
+        : (page as unknown as Page);
+    const ctx = playwrightPage.context();
 
     // Always close the page first to free memory
-    if (page) {
-      try {
-        await (page as Page).close();
-      } catch {
-        // Page may have already been closed
-      }
+    try {
+      await playwrightPage.close();
+    } catch {
+      // Page may have already been closed
     }
 
     // Check if this is any platform's authenticated context

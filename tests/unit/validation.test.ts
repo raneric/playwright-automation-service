@@ -1,6 +1,6 @@
-import { describe, it } from 'node:test';
-import { expect } from 'playwright/test';
-import { ClaimInputDTO, claimInputSchema } from '../../src/core/dto';
+import { describe, it, expect } from '@jest/globals';
+import { claimInputSchema } from '../../src/core/dto';
+import type { ClaimInputDTO } from '../../src/core/dto';
 
 describe('ClaimInputDTO validation', () => {
   const validInput: ClaimInputDTO = {
@@ -45,10 +45,10 @@ describe('ClaimInputDTO validation', () => {
     expect(result.success).toBe(true);
   });
 
-  it('should reject input with empty productLines', () => {
+  it('should reject input with empty products', () => {
     const result = claimInputSchema.safeParse({
       ...validInput,
-      productLines: [],
+      products: [],
     });
     expect(result.success).toBe(false);
   });

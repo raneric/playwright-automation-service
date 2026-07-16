@@ -1,5 +1,9 @@
 import { ClaimInputDTO } from '../dto';
-import { IClaimAutomationPort, IBrowserSession } from '../ports';
+import {
+  IClaimAutomationPort,
+  IBrowserSession,
+  IAutomationContext,
+} from '../ports';
 import { Result } from '../../shared/Result';
 import { Logger } from '../../shared/logger';
 import { AutomationError } from '../../shared/errors';
@@ -35,8 +39,9 @@ export class CreateClaimUseCase {
     const formData = this.toFormData(input);
 
     // 2. Acquire authenticated session for the target platform
-    const { page } =
-      await this.browserSession.createAuthenticatedSession(platform);
+    const { page } = await this.browserSession.createAuthenticatedSession(
+      platform
+    );
 
     try {
       // 3. Execute automation (resolved per-platform)
@@ -57,7 +62,7 @@ export class CreateClaimUseCase {
       );
       return result;
     } finally {
-      await this.browserSession.releaseSession(page.context(), page);
+      await this.browserSession.releaseSession(page);
     }
   }
 

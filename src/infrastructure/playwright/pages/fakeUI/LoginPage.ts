@@ -1,15 +1,30 @@
 import { Page } from 'playwright';
 import { BasePage } from './BasePage';
 import { Logger } from '../../../../shared/logger';
-import { LoginSelectors } from '../../selectors';
+
+/**
+ * Per-platform login selectors (data-testid values without the attribute wrapper).
+ */
+export interface LoginSelectorConfig {
+  username: string;
+  password: string;
+  submitBtn: string;
+  error: string;
+}
 
 /**
  * Page Object for the Login page.
  * Encapsulates all interactions with the login form.
+ *
+ * Selectors are injected via constructor — no hardcoded selectors.
+ * This allows different SaaS platforms to use different data-testid values.
  */
 export class LoginPage extends BasePage {
-  constructor(page: Page, logger: Logger) {
+  private readonly selectors: LoginSelectorConfig;
+
+  constructor(page: Page, logger: Logger, selectors: LoginSelectorConfig) {
     super(page, logger);
+    this.selectors = selectors;
   }
 
   /**
@@ -29,14 +44,14 @@ export class LoginPage extends BasePage {
 
     const loginUrl = this.page.url();
 
-    await this.fillByTestId(LoginSelectors.username, username);
-    await this.fillByTestId(LoginSelectors.password, password);
-    await this.clickByTestId(LoginSelectors.submitBtn);
+    await this.fillByTestId(this.selectors.username, username);
+    await this.fillByTestId(this.selectors.password, password);
+    await this.clickByTestId(this.selectors.submitBtn);
 
     const outcome = await Promise.race([
       // Credential error appears on the login page itself
       this.page
-        .waitForSelector(`[data-testid="${LoginSelectors.error}"]`, {
+        .waitForSelector(`[data-testid="${this.selectors.error}"]`, {
           state: 'visible',
         })
         .then(() => 'error' as const),
@@ -48,7 +63,7 @@ export class LoginPage extends BasePage {
     ]);
 
     if (outcome === 'error') {
-      const errorMsg = await this.textByTestId(LoginSelectors.error);
+      const errorMsg = await this.textByTestId(this.selectors.error);
       await this.screenshot('login-failure');
       throw new Error(`Login failed: ${errorMsg || 'Invalid credentials'}`);
     }

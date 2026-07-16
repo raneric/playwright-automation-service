@@ -1,5 +1,9 @@
 import { SearchInputDTO } from '../dto';
-import { ISearchAutomationPort, IBrowserSession } from '../ports';
+import {
+  ISearchAutomationPort,
+  IBrowserSession,
+  IAutomationContext,
+} from '../ports';
 import { Result } from '../../shared/Result';
 import { Logger } from '../../shared/logger';
 import { AutomationError } from '../../shared/errors';
@@ -58,7 +62,7 @@ export class SearchProductsUseCase {
 
       return Result.ok({ products: result.value });
     } finally {
-      await this.browserSession.releaseSession(page.context(), page);
+      await this.browserSession.releaseSession(page);
     }
   }
 }

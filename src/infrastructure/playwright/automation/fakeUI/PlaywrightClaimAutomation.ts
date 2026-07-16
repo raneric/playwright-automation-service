@@ -1,32 +1,42 @@
-import { Page } from 'playwright';
-import { IClaimAutomationPort } from '../../../../core/ports';
+import {
+  IAutomationContext,
+  IClaimAutomationPort,
+} from '../../../../core/ports';
 import { Logger } from '../../../../shared/logger';
 import { PlatformConfig } from '../../../config';
+import { FormConfig } from '../../../config/form/types';
 import { Result } from '../../../../shared/Result';
 import { FormPage } from '../../pages';
-import { customerClaimConfig } from '../../../config/form';
+import { PlaywrightAutomationContext } from '../../PlaywrightAutomationContext';
 import { gotoWithRetry, retry } from '../../utils';
-import { PagePath } from '../../../../shared/constants';
 
 /**
  * Playwright adapter implementing the Claim automation port.
+ *
+ * Receives IAutomationContext (framework-agnostic) and extracts the
+ * underlying Playwright Page for use with Playwright-specific page objects.
+ *
+ * The FormConfig is injected — different platforms can use different form
+ * structures without requiring code changes.
  */
 export class PlaywrightClaimAutomation implements IClaimAutomationPort {
   constructor(
     private readonly platform: PlatformConfig,
+    private readonly formConfig: FormConfig,
     private readonly logger: Logger
   ) {}
 
   async createClaim(
-    page: Page,
+    ctx: IAutomationContext,
     claimData: Record<string, unknown>
   ): Promise<Result<Record<string, unknown>>> {
     try {
-      const formPage = new FormPage(page, this.logger, customerClaimConfig);
+      const page = (ctx as PlaywrightAutomationContext).getPage();
+      const formPage = new FormPage(page, this.logger, this.formConfig);
 
       await gotoWithRetry(
         page,
-        `${this.platform.baseUrl}${PagePath.customerClaim}`,
+        `${this.platform.baseUrl}${this.platform.pages.customerClaim}`,
         this.logger
       );
       await formPage.waitForForm();

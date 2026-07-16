@@ -12,6 +12,22 @@ export interface PlatformConfig {
   password: string;
   /** Optional API key for protecting this platform's endpoints */
   apiKey: string | undefined;
+
+  /** Per-platform page paths (relative to baseUrl) */
+  pages: {
+    login: string;
+    purchaseOrder: string;
+    purchaseOrderList: string;
+    customerClaim: string;
+  };
+
+  /** Per-platform login form selectors (data-testid values) */
+  loginSelectors: {
+    username: string;
+    password: string;
+    submitBtn: string;
+    error: string;
+  };
 }
 
 export interface AppConfig {
@@ -96,6 +112,27 @@ function loadPlatforms(): Record<string, PlatformConfig> {
       username: envStr(`${prefix}USERNAME`, 'admin'),
       password: envStr(`${prefix}PASSWORD`, 'password123'),
       apiKey: process.env[`${prefix}API_KEY`] || undefined,
+      pages: {
+        login: envStr(`${prefix}PAGE_LOGIN`, '/login'),
+        purchaseOrder: envStr(
+          `${prefix}PAGE_PURCHASE_ORDER`,
+          '/purchase-order'
+        ),
+        purchaseOrderList: envStr(
+          `${prefix}PAGE_PURCHASE_ORDER_LIST`,
+          '/purchase-orders'
+        ),
+        customerClaim: envStr(
+          `${prefix}PAGE_CUSTOMER_CLAIM`,
+          '/customer-claim'
+        ),
+      },
+      loginSelectors: {
+        username: envStr(`${prefix}LOGIN_SEL_USERNAME`, 'login-username'),
+        password: envStr(`${prefix}LOGIN_SEL_PASSWORD`, 'login-password'),
+        submitBtn: envStr(`${prefix}LOGIN_SEL_SUBMIT`, 'login-submit-btn'),
+        error: envStr(`${prefix}LOGIN_SEL_ERROR`, 'login-error'),
+      },
     };
   }
 

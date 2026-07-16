@@ -7,6 +7,10 @@ import {
 } from 'awilix';
 import { Logger } from '../shared/logger';
 import { AppConfig, PlatformConfig } from '../infrastructure/config';
+import { FormConfig } from '../infrastructure/config/form/types';
+import { customerClaimConfig } from '../infrastructure/config/form';
+import { TableConfig } from '../infrastructure/config/table/types';
+import { purchaseOrderTableConfig } from '../infrastructure/config/table';
 import { BrowserManager } from '../infrastructure/playwright/BrowserManager';
 import {
   PlaywrightClaimAutomation,
@@ -17,7 +21,11 @@ import { CreateClaimUseCase } from '../core/usecases/CreateClaimUseCase';
 import { SearchProductsUseCase } from '../core/usecases/SearchProductsUseCase';
 import { ClaimController } from '../infrastructure/http/controllers/ClaimController';
 import { SearchController } from '../infrastructure/http/controllers/SearchController';
-import { IClaimAutomationPort, ISearchAutomationPort } from '../core/ports';
+import {
+  IClaimAutomationPort,
+  ISearchAutomationPort,
+  ILoginWorkflow,
+} from '../core/ports';
 
 /**
  * Build the Awilix DI container.
@@ -72,19 +80,43 @@ export function buildContainer(
   // Per-platform factory functions — registered as values so Awilix
   // does NOT try to resolve their parameter names from the container.
 
-  const getLoginWorkflow = (platformName: string): PlaywrightLoginWorkflow => {
+  /**
+   * Resolve the FormConfig for a given platform.
+   * Currently defaults to customerClaimConfig for all platforms.
+   * When plugin architecture is implemented, this will look up
+   * platform-specific form configs from the plugin registry.
+   */
+  const getFormConfig = (_platformName: string): FormConfig => {
+    // TODO: resolve from plugin registry when implemented
+    return customerClaimConfig;
+  };
+
+  /**
+   * Resolve the TableConfig for a given platform.
+   * Currently defaults to purchaseOrderTableConfig for all platforms.
+   * When plugin architecture is implemented, this will look up
+   * platform-specific table configs from the plugin registry.
+   */
+  const getTableConfig = (_platformName: string): TableConfig => {
+    // TODO: resolve from plugin registry when implemented
+    return purchaseOrderTableConfig;
+  };
+
+  const getLoginWorkflow = (platformName: string): ILoginWorkflow => {
     const platform = getPlatform(platformName);
     return new PlaywrightLoginWorkflow(platform, logger);
   };
 
   const getClaimAutomation = (platformName: string): IClaimAutomationPort => {
     const platform = getPlatform(platformName);
-    return new PlaywrightClaimAutomation(platform, logger);
+    const formConfig = getFormConfig(platformName);
+    return new PlaywrightClaimAutomation(platform, formConfig, logger);
   };
 
   const getSearchAutomation = (platformName: string): ISearchAutomationPort => {
     const platform = getPlatform(platformName);
-    return new PlaywrightSearchAutomation(platform, logger);
+    const tableConfig = getTableConfig(platformName);
+    return new PlaywrightSearchAutomation(platform, tableConfig, logger);
   };
 
   container.register({
