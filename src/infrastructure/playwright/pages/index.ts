@@ -1,4 +1,4 @@
-export { BasePage } from './BasePage';
-export { LoginPage } from './LoginPage';
-export { FormPage } from './FormPage';
-export { OrderListPage } from './OrderListPage';
+export { BasePage } from './fakeUI/BasePage';
+export { LoginPage } from './fakeUI/LoginPage';
+export { FormPage } from './fakeUI/FormPage';
+export { OrderListPage } from './fakeUI/OrderListPage';

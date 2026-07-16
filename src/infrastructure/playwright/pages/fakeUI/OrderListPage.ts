@@ -1,8 +1,8 @@
 import { Page } from 'playwright';
-import { Logger } from '../../../shared/logger';
 import { BasePage } from './BasePage';
-import { ProductResult } from '../../../core/domain/entities';
-import { DEFAULT_TIMEOUTS } from '../../../shared/constants';
+import { Logger } from '../../../../shared/logger';
+import { DEFAULT_TIMEOUTS } from '../../../../shared/constants';
+import { ProductResult } from '../../../../core/domain/entities';
 
 /**
  * Page Object for the Purchase Order List page.
@@ -126,7 +126,9 @@ export class OrderListPage extends BasePage {
    * Returns false if the button is missing or has the `disabled` attribute.
    */
   async hasNextPage(): Promise<boolean> {
-    const nextBtn = this.page.locator('button[type="button"]', { hasText: 'Next' });
+    const nextBtn = this.page.locator('button[type="button"]', {
+      hasText: 'Next',
+    });
     const count = await nextBtn.count();
     if (count === 0) return false;
     return !(await nextBtn.isDisabled());
@@ -137,7 +139,9 @@ export class OrderListPage extends BasePage {
    */
   async clickNext(): Promise<void> {
     this.logger.info('Navigating to next page');
-    await this.page.locator('button[type="button"]', { hasText: 'Next' }).click();
+    await this.page
+      .locator('button[type="button"]', { hasText: 'Next' })
+      .click();
 
     // Wait for loading to start
     const loadingStarted = await this.page

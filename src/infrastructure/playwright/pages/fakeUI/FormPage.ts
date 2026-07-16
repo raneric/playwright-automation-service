@@ -1,11 +1,11 @@
 import { Page } from 'playwright';
-import { Logger } from '../../../shared/logger';
-import { FieldDescriptor } from '../../config/form/types';
+import { Logger } from '../../../../shared/logger';
+import { FieldDescriptor } from '../../../config/form/types';
 import { BasePage } from './BasePage';
-import { FormConfig } from '../../config/form/types';
-import { RetryableError, isRetryableStatus } from '../../../shared/errors';
-import { DEFAULT_TIMEOUTS } from '../../../shared/constants';
-import { Result } from '../../../shared/Result';
+import { FormConfig } from '../../../config/form/types';
+import { DEFAULT_TIMEOUTS } from '../../../../shared/constants';
+import { Result } from '../../../../shared/Result';
+import { isRetryableStatus, RetryableError } from '../../../../shared/errors';
 
 /**
  * Generic Page Object for any form-driven page.

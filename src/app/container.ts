@@ -12,7 +12,7 @@ import {
   PlaywrightClaimAutomation,
   PlaywrightSearchAutomation,
   PlaywrightLoginWorkflow,
-} from '../infrastructure/playwright/PlaywrightAutomation';
+} from '../infrastructure/playwright/automation';
 import { CreateClaimUseCase } from '../core/usecases/CreateClaimUseCase';
 import { SearchProductsUseCase } from '../core/usecases/SearchProductsUseCase';
 import { ClaimController } from '../infrastructure/http/controllers/ClaimController';

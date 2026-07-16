@@ -1,6 +1,6 @@
 import { Page, Locator } from 'playwright';
-import { Logger } from '../../../shared/logger';
-import { DEFAULT_TIMEOUTS } from '../../../shared/constants';
+import { DEFAULT_TIMEOUTS } from '../../../../shared/constants';
+import { Logger } from '../../../../shared/logger';
 
 /**
  * Base class for all Page Objects.
@@ -50,13 +50,13 @@ export abstract class BasePage {
 
   /** Click an element identified by a CSS selector */
   async clickBySelector(selector: string): Promise<void> {
-    const test = this.page.locator(selector)
+    const test = this.page.locator(selector);
     await test.click();
   }
 
   /** Click an element by class name */
   async clickByClass(className: string): Promise<void> {
-    await this.page.locator(`.${className}`).click({button:'left'});
+    await this.page.locator(`.${className}`).click({ button: 'left' });
   }
 
   /** Get text content of an element by data-testid */

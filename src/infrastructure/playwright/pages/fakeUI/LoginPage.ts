@@ -1,7 +1,7 @@
 import { Page } from 'playwright';
-import { Logger } from '../../../shared/logger';
 import { BasePage } from './BasePage';
-import { LoginSelectors } from '../selectors/login';
+import { Logger } from '../../../../shared/logger';
+import { LoginSelectors } from '../../selectors';
 
 /**
  * Page Object for the Login page.
@@ -36,7 +36,9 @@ export class LoginPage extends BasePage {
     const outcome = await Promise.race([
       // Credential error appears on the login page itself
       this.page
-        .waitForSelector(`[data-testid="${LoginSelectors.error}"]`, { state: 'visible' })
+        .waitForSelector(`[data-testid="${LoginSelectors.error}"]`, {
+          state: 'visible',
+        })
         .then(() => 'error' as const),
 
       // Any navigation away from the login URL means the app accepted the credentials
