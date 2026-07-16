@@ -4,15 +4,11 @@ import { PlatformConfig } from '../config';
 import { LoginPage } from './pages/LoginPage';
 import { FormPage } from './pages/FormPage';
 import { OrderListPage } from './pages/OrderListPage';
-import { customerClaimConfig, purchaseOrderConfig } from '../config/form';
-import { gotoWithRetry } from './utils/retry';
+import { customerClaimConfig } from '../config/form';
+import { gotoWithRetry, retry } from './utils/retry';
 import { PagePath } from '../../shared/constants';
 import { Result } from '../../shared/Result';
-import {
-  IClaimAutomationPort,
-  IOrderAutomationPort,
-  ISearchAutomationPort,
-} from '../../core/ports';
+import { IClaimAutomationPort, ISearchAutomationPort } from '../../core/ports';
 import { ProductResult } from '../../core/domain/entities';
 
 /**
@@ -27,7 +23,7 @@ export class PlaywrightClaimAutomation implements IClaimAutomationPort {
   async createClaim(
     page: Page,
     claimData: Record<string, unknown>
-  ): Promise<Result<string>> {
+  ): Promise<Result<Record<string, unknown>>> {
     try {
       const formPage = new FormPage(page, this.logger, customerClaimConfig);
 
@@ -45,47 +41,18 @@ export class PlaywrightClaimAutomation implements IClaimAutomationPort {
         await formPage.fillItems(claimData.items as Record<string, unknown>[]);
       }
 
-      const claimId = await formPage.submit();
-      this.logger.info({ claimId }, 'Claim created successfully');
+      const submitResult = await retry(() => formPage.submit(), {
+        logger: this.logger,
+        label: 'claim-form-submit',
+      });
 
-      return Result.ok(claimId);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      return Result.fail(new Error(message));
-    }
-  }
-}
+      if (!submitResult.success) {
+        return Result.fail(submitResult.error);
+      }
 
-/**
- * Playwright adapter implementing the Order automation port.
- */
-export class PlaywrightOrderAutomation implements IOrderAutomationPort {
-  constructor(
-    private readonly platform: PlatformConfig,
-    private readonly logger: Logger
-  ) {}
+      this.logger.info(submitResult.value);
 
-  async createOrder(
-    page: Page,
-    orderData: Record<string, unknown>
-  ): Promise<Result<string>> {
-    try {
-      const formPage = new FormPage(page, this.logger, purchaseOrderConfig);
-
-      await gotoWithRetry(
-        page,
-        `${this.platform.baseUrl}${PagePath.purchaseOrder}`,
-        this.logger
-      );
-      await formPage.waitForForm();
-
-      this.logger.info('Filling purchase order form');
-      await formPage.fillFields(orderData);
-
-      const orderId = await formPage.submit();
-      this.logger.info({ orderId }, 'Order created successfully');
-
-      return Result.ok(orderId);
+      return Result.ok(claimData);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       return Result.fail(new Error(message));

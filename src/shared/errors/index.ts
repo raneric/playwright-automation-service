@@ -9,4 +9,7 @@ export {
   RateLimitError,
   UpstreamError,
   NavigationError,
+  RetryableError,
+  isRetryableStatus,
+  RETRYABLE_STATUS_CODES,
 } from './AppError';

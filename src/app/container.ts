@@ -10,21 +10,14 @@ import { AppConfig, PlatformConfig } from '../infrastructure/config';
 import { BrowserManager } from '../infrastructure/playwright/BrowserManager';
 import {
   PlaywrightClaimAutomation,
-  PlaywrightOrderAutomation,
   PlaywrightSearchAutomation,
   PlaywrightLoginWorkflow,
 } from '../infrastructure/playwright/PlaywrightAutomation';
 import { CreateClaimUseCase } from '../core/usecases/CreateClaimUseCase';
-import { CreateOrderUseCase } from '../core/usecases/CreateOrderUseCase';
 import { SearchProductsUseCase } from '../core/usecases/SearchProductsUseCase';
 import { ClaimController } from '../infrastructure/http/controllers/ClaimController';
-import { OrderController } from '../infrastructure/http/controllers/OrderController';
 import { SearchController } from '../infrastructure/http/controllers/SearchController';
-import {
-  IClaimAutomationPort,
-  IOrderAutomationPort,
-  ISearchAutomationPort,
-} from '../core/ports';
+import { IClaimAutomationPort, ISearchAutomationPort } from '../core/ports';
 
 /**
  * Build the Awilix DI container.
@@ -89,11 +82,6 @@ export function buildContainer(
     return new PlaywrightClaimAutomation(platform, logger);
   };
 
-  const getOrderAutomation = (platformName: string): IOrderAutomationPort => {
-    const platform = getPlatform(platformName);
-    return new PlaywrightOrderAutomation(platform, logger);
-  };
-
   const getSearchAutomation = (platformName: string): ISearchAutomationPort => {
     const platform = getPlatform(platformName);
     return new PlaywrightSearchAutomation(platform, logger);
@@ -104,14 +92,12 @@ export function buildContainer(
     browserSession: asClass(BrowserManager, { lifetime: 'SINGLETON' }),
     getLoginWorkflow: asValue(getLoginWorkflow),
     getClaimAutomation: asValue(getClaimAutomation),
-    getOrderAutomation: asValue(getOrderAutomation),
     getSearchAutomation: asValue(getSearchAutomation),
   });
 
   // ── Application ──────────────────────────────────────────────
   container.register({
     createClaimUseCase: asClass(CreateClaimUseCase, { lifetime: 'SINGLETON' }),
-    createOrderUseCase: asClass(CreateOrderUseCase, { lifetime: 'SINGLETON' }),
     searchProductsUseCase: asClass(SearchProductsUseCase, {
       lifetime: 'SINGLETON',
     }),
@@ -120,7 +106,6 @@ export function buildContainer(
   // ── Controllers ──────────────────────────────────────────────
   container.register({
     claimController: asClass(ClaimController, { lifetime: 'SINGLETON' }),
-    orderController: asClass(OrderController, { lifetime: 'SINGLETON' }),
     searchController: asClass(SearchController, { lifetime: 'SINGLETON' }),
   });
 

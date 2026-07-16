@@ -3,6 +3,9 @@ import { Logger } from '../../../shared/logger';
 import { FieldDescriptor } from '../../config/form/types';
 import { BasePage } from './BasePage';
 import { FormConfig } from '../../config/form/types';
+import { RetryableError, isRetryableStatus } from '../../../shared/errors';
+import { DEFAULT_TIMEOUTS } from '../../../shared/constants';
+import { Result } from '../../../shared/Result';
 
 /**
  * Generic Page Object for any form-driven page.
@@ -40,7 +43,7 @@ export class FormPage extends BasePage {
       await this.clickByTestId(itemsConfig.addButtonTestId);
       const firstField = itemsConfig.rowFields[0];
       await this.page.waitForSelector(
-        this.selector([...this.rowPrefix(), idx, firstField.key]),
+        this.selector([...this.rowPrefix(), idx, firstField.key])
       );
 
       for (const descriptor of itemsConfig.rowFields) {
@@ -49,35 +52,70 @@ export class FormPage extends BasePage {
     }
   }
 
-  /** Click submit and return the success message */
-  async submit(): Promise<string> {
-    const submitId =
-      this.config.submitTestId ?? `${this.config.prefix}-submit-btn`;
-    const successId =
-      this.config.successTestId ?? `${this.config.prefix}-success-message`;
+  /**
+   * Click submit, capture the HTTP response status, and return the success message.
+   *
+   * - On 2xx: returns the success message text
+   * - On retryable status (5xx, 429, 408): throws RetryableError so callers can retry
+   * - On non-retryable client errors (4xx): throws a standard Error immediately
+   */
+  async submit(): Promise<Result<string>> {
+    const submitId = `${this.config.prefix}-${this.config.submitTestId}`;
+    const successId = `${this.config.prefix}-${this.config.successTestId}`;
+    const serverErrorId = `${this.config.prefix}-${this.config.serverErrorTestId}`;
+    const validationErrorId = `${this.config.prefix}-${this.config.formValidationErrorTestId}`;
+
+    // Start waiting for the form submission POST response *before* clicking submit.
+    // Playwright matches the first POST request that occurs after the click.
+    const responsePromise = this.page
+      .waitForResponse((resp) => resp.request().method() === 'POST', {
+        timeout: DEFAULT_TIMEOUTS.selector,
+      })
+      .catch(() => null); // If no POST response (e.g. full-page navigation), resolve null
 
     await this.clickByTestId(submitId);
 
+    const response = await responsePromise;
+
+    // Wait for the DOM to reflect the outcome
     const result = await Promise.race([
       this.page
         .waitForSelector(`[data-testid="${successId}"]`)
         .then(() => 'success' as const),
       this.page
-        .waitForSelector('.field-error', { state: 'attached' })
-        .then(() => 'error' as const),
+        .waitForSelector(`[data-testid="${serverErrorId}"]`)
+        .then(() => 'server_error' as const),
+      this.page
+        .waitForSelector(`[data-testid="${validationErrorId}"]`)
+        .then(() => 'validation_error' as const),
     ]);
 
-    if (result === 'error') {
-      const errors = await this.page.$$eval('.field-error', (els) =>
-        els.map((el) => el.textContent?.trim()).filter(Boolean),
+    if (result === 'server_error' || result === 'validation_error') {
+      const errors = await this.page.$$eval('.form-error', (els) =>
+        els.map((el) => el.textContent?.trim()).filter(Boolean)
       );
-      await this.screenshot(`${this.config.prefix}-form-validation-error`);
-      throw new Error(
-        `Form validation failed:\n${errors.map((e) => `  - ${e}`).join('\n')}`,
-      );
+      const message = `Form submission failed:\n${errors.map((e) => `  - ${e}`).join('\n')}`;
+
+      // Check the HTTP response status to decide whether to retry
+      const statusCode = response?.status();
+      if (statusCode && isRetryableStatus(statusCode)) {
+        this.logger.warn(
+          { statusCode, errors },
+          'Retryable server error on form submission'
+        );
+        throw new RetryableError(message, statusCode);
+      }
+
+      // Non-retryable — fail immediately
+      throw new Error(message);
     }
 
-    return (await this.textByTestId(successId)) || 'unknown';
+    // Extract success message text if the element exists
+    const successText = await this.page
+      .textContent(`[data-testid="${successId}"]`)
+      .then((t) => t?.trim() ?? '');
+
+    return Result.ok(successText);
   }
 
   // ── Private helpers ──────────────────────────────────────────
@@ -85,7 +123,7 @@ export class FormPage extends BasePage {
   private async fillNode(
     descriptor: FieldDescriptor,
     data: Record<string, unknown>,
-    parentPath: string[],
+    parentPath: string[]
   ): Promise<void> {
     if (descriptor.children) {
       for (const child of descriptor.children) {

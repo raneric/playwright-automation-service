@@ -1,6 +1,7 @@
 import { Page } from 'playwright';
 import { Logger } from '../../../shared/logger';
 import { RETRY_POLICY, DEFAULT_TIMEOUTS } from '../../../shared/constants';
+import { RetryableError } from '../../../shared/errors';
 
 /**
  * Navigate to a URL with exponential backoff retry.
@@ -10,7 +11,7 @@ export async function gotoWithRetry(
   page: Page,
   url: string,
   logger: Logger,
-  maxRetries: number = RETRY_POLICY.maxNavigationRetries,
+  maxRetries: number = RETRY_POLICY.maxNavigationRetries
 ): Promise<void> {
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
@@ -26,7 +27,7 @@ export async function gotoWithRetry(
 
       if (attempt === maxRetries) {
         throw new Error(
-          `Failed to reach ${url} after ${maxRetries} attempts: ${message}`,
+          `Failed to reach ${url} after ${maxRetries} attempts: ${message}`
         );
       }
 
@@ -39,6 +40,8 @@ export async function gotoWithRetry(
 
 /**
  * Retry an async operation with exponential backoff.
+ * Only retries when the thrown error is a RetryableError —
+ * all other errors propagate immediately.
  */
 export async function retry<T>(
   fn: () => Promise<T>,
@@ -47,7 +50,7 @@ export async function retry<T>(
     baseDelayMs?: number;
     logger?: Logger;
     label?: string;
-  } = {},
+  } = {}
 ): Promise<T> {
   const {
     maxRetries = 3,
@@ -62,8 +65,21 @@ export async function retry<T>(
     try {
       return await fn();
     } catch (err) {
+      // Only retry on RetryableError — all other errors fail fast
+      if (!(err instanceof RetryableError)) {
+        throw err;
+      }
+
       lastError = err;
-      logger?.warn({ attempt, maxRetries, label, error: err }, 'Retry attempt failed');
+      logger?.warn(
+        {
+          attempt,
+          maxRetries,
+          label,
+          statusCode: (err as RetryableError).statusCode,
+        },
+        'Retryable error — will retry'
+      );
 
       if (attempt < maxRetries) {
         const delay = baseDelayMs * Math.pow(2, attempt - 1);

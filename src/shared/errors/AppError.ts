@@ -11,7 +11,7 @@ export class AppError extends Error {
     message: string,
     code: string = 'INTERNAL_ERROR',
     statusCode: number = 500,
-    isOperational: boolean = true,
+    isOperational: boolean = true
   ) {
     super(message);
     this.name = this.constructor.name;
@@ -62,8 +62,12 @@ export class ConflictError extends AppError {
 
 /** 422 — The SaaS application rejected the operation (form validation, etc.) */
 export class AutomationError extends AppError {
-  constructor(message: string) {
-    super(message, 'AUTOMATION_ERROR', 422);
+  constructor(
+    message: string,
+    code: string = 'AUTOMATION_ERROR',
+    statusCode: number = 422
+  ) {
+    super(message, code, statusCode);
   }
 }
 
@@ -86,4 +90,36 @@ export class NavigationError extends AppError {
   constructor(url: string, message: string) {
     super(`Failed to navigate to ${url}: ${message}`, 'NAVIGATION_ERROR', 504);
   }
+}
+
+/**
+ * Error thrown when a form submission returns a retryable HTTP status.
+ * The retry utility checks for this error type before retrying.
+ */
+export class RetryableError extends AppError {
+  constructor(
+    message: string,
+    statusCode: number,
+    code: string = 'RETRYABLE_ERROR'
+  ) {
+    super(message, code, statusCode);
+  }
+}
+
+/**
+ * HTTP status codes that indicate a transient server issue — safe to retry.
+ * - 408: Request Timeout
+ * - 429: Too Many Requests (rate limiting)
+ * - 500: Internal Server Error
+ * - 502: Bad Gateway
+ * - 503: Service Unavailable
+ * - 504: Gateway Timeout
+ */
+export const RETRYABLE_STATUS_CODES = new Set([408, 429, 500, 502, 503, 504]);
+
+/**
+ * Check whether an HTTP status code is retryable.
+ */
+export function isRetryableStatus(statusCode: number): boolean {
+  return RETRYABLE_STATUS_CODES.has(statusCode);
 }

@@ -25,7 +25,7 @@ export class CreateClaimUseCase {
   async execute(
     platform: string,
     input: ClaimInputDTO
-  ): Promise<Result<{ claimId: string }>> {
+  ): Promise<Record<string, unknown>> {
     this.logger.info(
       { platform, orderCode: input.customer },
       'CreateClaimUseCase: starting'
@@ -35,9 +35,8 @@ export class CreateClaimUseCase {
     const formData = this.toFormData(input);
 
     // 2. Acquire authenticated session for the target platform
-    const { page } = await this.browserSession.createAuthenticatedSession(
-      platform
-    );
+    const { page } =
+      await this.browserSession.createAuthenticatedSession(platform);
 
     try {
       // 3. Execute automation (resolved per-platform)
@@ -56,7 +55,7 @@ export class CreateClaimUseCase {
         { platform, claimId: result.value },
         'CreateClaimUseCase: completed'
       );
-      return Result.ok({ claimId: result.value });
+      return result;
     } finally {
       await this.browserSession.releaseSession(page.context(), page);
     }

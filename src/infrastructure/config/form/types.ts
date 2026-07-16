@@ -39,4 +39,8 @@ export interface FormConfig {
   submitTestId?: string;
   /** data-testid of the success message element (defaults to "{prefix}-success-message") */
   successTestId?: string;
+
+  serverErrorTestId?: string;
+
+  formValidationErrorTestId?: string;
 }

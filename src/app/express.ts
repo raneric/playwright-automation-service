@@ -4,7 +4,6 @@ import { Logger } from '../shared/logger';
 import { AppConfig } from '../infrastructure/config';
 import {
   createClaimRoutes,
-  createOrderRoutes,
   createSearchRoutes,
   createHealthRoutes,
 } from '../infrastructure/http/routes';
@@ -60,10 +59,6 @@ export function createApp(container: AwilixContainer): Express {
   apiRouter.use(
     '/:platform/claim',
     createClaimRoutes(container.resolve('claimController'))
-  );
-  apiRouter.use(
-    '/:platform/order',
-    createOrderRoutes(container.resolve('orderController'))
   );
   apiRouter.use(
     '/:platform/search',

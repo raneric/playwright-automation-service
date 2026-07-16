@@ -50,4 +50,8 @@ export const customerClaimConfig: FormConfig = {
       { key: 'order_date' },
     ],
   },
+  serverErrorTestId: 'server-error',
+  formValidationErrorTestId: 'validation-error',
+  submitTestId: 'submit-btn',
+  successTestId: 'success-message',
 };
