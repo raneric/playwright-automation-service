@@ -104,6 +104,9 @@ export class OrderListPage extends BasePage {
       const orderDate = await this.page
         .textContent(`[data-testid="po-list-row-${index}-date"]`)
         .then((t) => t?.trim() || '');
+      const lostNumber = await this.page
+        .textContent(`[data-testid="po-list-row-${index}-lot-number"]`)
+        .then((t) => t?.trim() || '');
 
       if (itemCode || productName) {
         results.push({
@@ -113,6 +116,7 @@ export class OrderListPage extends BasePage {
           customerName,
           orderCode,
           orderDate,
+          lostNumber,
           existsInSystem: true,
         });
       }

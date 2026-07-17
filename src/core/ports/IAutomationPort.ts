@@ -12,7 +12,6 @@ export interface IClaimAutomationPort {
 export interface ISearchAutomationPort {
   searchProducts(
     page: Page,
-    customer: string,
-    productNames: string[]
+    values: string[]
   ): Promise<Result<ProductResult[]>>;
 }

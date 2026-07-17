@@ -6,5 +6,6 @@ export interface ProductResult {
   customerName: string;
   orderCode: string;
   orderDate: string;
+  lostNumber: string;
   existsInSystem: boolean;
 }

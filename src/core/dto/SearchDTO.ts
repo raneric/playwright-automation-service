@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { string, z } from 'zod';
 
 const productInfoSchema = z.object({
   item_code: z.string().nullable(),
@@ -7,8 +7,7 @@ const productInfoSchema = z.object({
 });
 
 export const searchInputSchema = z.object({
-  customer: z.string().default("N/A"),
-  products: z.array(productInfoSchema).min(1, 'At least one product is required'),
+  values: z.array(z.string()).min(1),
 });
 
 export type SearchInputDTO = z.infer<typeof searchInputSchema>;

@@ -19,8 +19,7 @@ export class PlaywrightSearchAutomation implements ISearchAutomationPort {
 
   async searchProducts(
     page: Page,
-    customer: string,
-    productNames: string[]
+    values: string[]
   ): Promise<Result<ProductResult[]>> {
     try {
       const listPage = new OrderListPage(page, this.logger);
@@ -34,7 +33,7 @@ export class PlaywrightSearchAutomation implements ISearchAutomationPort {
 
       const allResults: ProductResult[] = [];
 
-      for (const term of productNames) {
+      for (const term of values) {
         this.logger.info({ term }, 'Searching');
         await listPage.clearSearch();
         await listPage.search(term);

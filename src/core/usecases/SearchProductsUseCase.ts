@@ -25,23 +25,14 @@ export class SearchProductsUseCase {
     platform: string,
     input: SearchInputDTO
   ): Promise<Result<SearchProductsOutput>> {
-    this.logger.info(
-      { platform, customer: input.customer },
-      'SearchProductsUseCase: starting'
-    );
+    this.logger.info('SearchProductsUseCase: starting');
 
-    const productNames = input.products.map((p) => p.product_name);
-    const { page } = await this.browserSession.createAuthenticatedSession(
-      platform
-    );
+    const { page } =
+      await this.browserSession.createAuthenticatedSession(platform);
 
     try {
       const automation = this.getSearchAutomation(platform);
-      const result = await automation.searchProducts(
-        page,
-        input.customer,
-        productNames
-      );
+      const result = await automation.searchProducts(page, input.values);
 
       if (!result.success) {
         this.logger.error(
