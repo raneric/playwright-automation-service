@@ -7,5 +7,8 @@ export interface ProductResult {
   orderCode: string;
   orderDate: string;
   lostNumber: string;
+  quantityOrdered: number;
+  quantityBilled: number;
+  quantityReceived: number;
   existsInSystem: boolean;
 }

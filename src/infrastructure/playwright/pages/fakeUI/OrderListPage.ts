@@ -107,6 +107,15 @@ export class OrderListPage extends BasePage {
       const lostNumber = await this.page
         .textContent(`[data-testid="po-list-row-${index}-lot-number"]`)
         .then((t) => t?.trim() || '');
+      const quantityOrdered = await this.page
+        .textContent(`[data-testid="po-list-row-${index}-quantity-ordered"]`)
+        .then((t) => t?.trim() || '');
+      const quantityBilled = await this.page
+        .textContent(`[data-testid="po-list-row-${index}-quantity-billed"]`)
+        .then((t) => t?.trim() || '');
+      const quantityReceived = await this.page
+        .textContent(`[data-testid="po-list-row-${index}-quantity-received"]`)
+        .then((t) => t?.trim() || '');
 
       if (itemCode || productName) {
         results.push({
@@ -117,6 +126,9 @@ export class OrderListPage extends BasePage {
           orderCode,
           orderDate,
           lostNumber,
+          quantityOrdered: Number(quantityOrdered),
+          quantityBilled: Number(quantityBilled),
+          quantityReceived: Number(quantityReceived),
           existsInSystem: true,
         });
       }
