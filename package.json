@@ -5,9 +5,9 @@
   "main": "dist/app/server.js",
   "type": "commonjs",
   "scripts": {
-    "dev": "tsx watch --inspect=0.0.0.0:9229 src/app/server.ts",
+    "dev": "tsx watch --inspect=0.0.0.0:9229 src/app/config/server.ts",
     "build": "tsc -p tsconfig.build.json",
-    "start": "node dist/app/server.js",
+    "start": "node dist/app/config/server.js",
     "lint": "eslint 'src/**/*.ts'",
     "test": "jest --passWithNoTests",
     "test:unit": "jest --testPathPattern='tests/unit'",

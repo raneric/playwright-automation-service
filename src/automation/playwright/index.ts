@@ -4,4 +4,4 @@ export {
   PlaywrightClaimAutomation,
   PlaywrightSearchAutomation,
   PlaywrightLoginWorkflow,
-} from './automation';
+} from './orchestration';

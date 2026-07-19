@@ -5,27 +5,27 @@ import {
   InjectionMode,
   AwilixContainer,
 } from 'awilix';
-import { Logger } from '../shared/logger';
-import { AppConfig, PlatformConfig } from '../infrastructure/config';
-import { FormConfig } from '../infrastructure/config/form/types';
-import { customerClaimConfig } from '../infrastructure/config/form';
-import { TableConfig } from '../infrastructure/config/table/types';
-import { purchaseOrderTableConfig } from '../infrastructure/config/table';
-import { BrowserManager } from '../infrastructure/playwright/BrowserManager';
+import { Logger } from '../../shared/logger';
+import { AppConfig, PlatformConfig } from '../../automation/config';
+import { FormConfig } from '../../automation/config/form/types';
+import { customerClaimConfig } from '../../automation/config/form';
+import { TableConfig } from '../../automation/config/table/types';
+import { purchaseOrderTableConfig } from '../../automation/config/table';
+import { BrowserManager } from '../../automation/playwright/BrowserManager';
 import {
   PlaywrightClaimAutomation,
   PlaywrightSearchAutomation,
   PlaywrightLoginWorkflow,
-} from '../infrastructure/playwright/automation';
-import { CreateClaimUseCase } from '../core/usecases/CreateClaimUseCase';
-import { SearchProductsUseCase } from '../core/usecases/SearchProductsUseCase';
-import { ClaimController } from '../infrastructure/http/controllers/ClaimController';
-import { SearchController } from '../infrastructure/http/controllers/SearchController';
+} from '../../automation/playwright/orchestration';
+import { CreateClaimUseCase } from '../../core/usecases/CreateClaimUseCase';
+import { SearchProductsUseCase } from '../../core/usecases/SearchProductsUseCase';
+import { ClaimController } from '../http/controllers/ClaimController';
+import { SearchController } from '../http/controllers/SearchController';
 import {
   IClaimAutomationPort,
   ISearchAutomationPort,
   ILoginWorkflow,
-} from '../core/ports';
+} from '../../core/ports';
 
 /**
  * Build the Awilix DI container.

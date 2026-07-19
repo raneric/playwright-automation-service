@@ -84,7 +84,6 @@ export class BrowserManager implements IBrowserSession {
         page: new PlaywrightAutomationContext(page, this.logger),
       };
     } catch (err) {
-      // If context creation itself fails, release the semaphore slot immediately
       this.semaphore.release();
       throw err;
     }
