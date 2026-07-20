@@ -5,19 +5,19 @@ import {
   InjectionMode,
   AwilixContainer,
 } from 'awilix';
-import { Logger } from '../shared/logger';
-import { AppConfig, PlatformConfig } from '../infrastructure/config';
-import { BrowserManager } from '../infrastructure/playwright/BrowserManager';
+import { Logger } from '../../shared/logger';
+import { AppConfig, PlatformConfig } from '../../automation/config';
+import { BrowserManager } from '../../automation/playwright/BrowserManager';
 import {
   PlaywrightClaimAutomation,
   PlaywrightSearchAutomation,
   PlaywrightLoginWorkflow,
-} from '../infrastructure/playwright/automation';
-import { CreateClaimUseCase } from '../core/usecases/CreateClaimUseCase';
-import { SearchProductsUseCase } from '../core/usecases/SearchProductsUseCase';
-import { ClaimController } from '../infrastructure/http/controllers/ClaimController';
-import { SearchController } from '../infrastructure/http/controllers/SearchController';
-import { IClaimAutomationPort, ISearchAutomationPort } from '../core/ports';
+} from '../../automation/playwright/interactions';
+import { CreateClaimUseCase } from '../../core/usecases/CreateClaimUseCase';
+import { SearchProductsUseCase } from '../../core/usecases/SearchProductsUseCase';
+import { ClaimController } from '../http/controllers/ClaimController';
+import { SearchController } from '../http/controllers/SearchController';
+import { IClaimAutomationPort, ISearchAutomationPort } from '../../core/ports';
 
 /**
  * Build the Awilix DI container.

@@ -11,9 +11,9 @@
  */
 import request from 'supertest';
 import { asValue } from 'awilix';
-import { createApp } from '../../src/app/express';
-import { buildContainer } from '../../src/app/container';
-import { loadConfig } from '../../src/infrastructure/config';
+import { createApp } from '../../src/app/config/express';
+import { buildContainer } from '../../src/app/config/container';
+import { loadConfig } from '../../src/automation/config';
 import { createLogger } from '../../src/shared/logger';
 import { Result } from '../../src/shared/Result';
 import { beforeEach, describe, it } from 'node:test';

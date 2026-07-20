@@ -1,10 +1,10 @@
 import 'dotenv/config';
 
-import { loadConfig, redactConfig } from '../infrastructure/config';
-import { createLogger } from '../shared/logger';
+import { loadConfig, redactConfig } from '../../automation/config';
+import { createLogger } from '../../shared/logger';
 import { buildContainer } from './container';
 import { createApp } from './express';
-import { BrowserManager } from '../infrastructure/playwright/BrowserManager';
+import { BrowserManager } from '../../automation/playwright/BrowserManager';
 
 /**
  * Application entry point.

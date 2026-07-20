@@ -2,7 +2,7 @@ import { chromium, Browser, BrowserContext, Page } from 'playwright';
 import { Logger } from '../../shared/logger';
 import { AppConfig } from '../config';
 import { IBrowserSession } from '../../core/ports';
-import { PlaywrightLoginWorkflow } from './automation';
+import { PlaywrightLoginWorkflow } from './interactions';
 
 /**
  * Simple counting semaphore for capping concurrent browser context creation.

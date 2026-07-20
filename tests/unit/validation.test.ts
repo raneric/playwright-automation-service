@@ -36,6 +36,11 @@ describe('ClaimInputDTO validation', () => {
         quantityReceived: 95,
         vendor: { name: 'Vendor Inc', id: 1 },
         status: 'received',
+        existsInSystem: true,
+        verifiedFromAttachment: {
+          attachmentName: 'N/A',
+          attachmentType: 'N/A',
+        },
       },
     ],
   };
