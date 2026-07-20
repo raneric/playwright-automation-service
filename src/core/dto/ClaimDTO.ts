@@ -24,6 +24,11 @@ const vendorSchema = z.object({
   id: z.number().int().optional(),
 });
 
+const verifiedFromAttachmentSchema = z.object({
+  attachmentName: z.string(),
+  attachmentType: z.string(),
+});
+
 // ── Product Line ───────────────────────────────────────────────
 const productLineSchema = z.object({
   lineNumber: z.number().int().nonnegative(),
@@ -38,6 +43,8 @@ const productLineSchema = z.object({
   orderDate: z.string().min(1),
   vendor: vendorSchema,
   status: z.string().min(1),
+  existsInSystem: z.boolean(),
+  verifiedFromAttachment: verifiedFromAttachmentSchema,
 });
 
 // ── Request Info ───────────────────────────────────────────────

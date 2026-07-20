@@ -32,7 +32,7 @@ export class ClaimController {
 
     res.status(201).json({
       success: true,
-      data: result.value,
+      data: input,
     });
   };
 }
