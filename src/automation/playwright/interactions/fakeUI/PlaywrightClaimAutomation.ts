@@ -7,6 +7,7 @@ import { FormPage } from '../../pages';
 import { customerClaimConfig } from '../../../config/form';
 import { gotoWithRetry, retry } from '../../utils';
 import { PagePath } from '../../../../shared/constants';
+import { TicketCreationOutput } from '../../../../shared/types/FakeUISaas';
 
 /**
  * Playwright adapter implementing the Claim automation port.
@@ -47,9 +48,24 @@ export class PlaywrightClaimAutomation implements IClaimAutomationPort {
         return Result.fail(submitResult.error);
       }
 
-      this.logger.info(submitResult.value);
+      const ticketCreationResult = submitResult.value;
 
-      return Result.ok(claimData);
+      if (ticketCreationResult.ticketCreated) {
+        this.logger.info(
+          `Claim form submitted successfully with ticket ID: ${ticketCreationResult.ticketId}`
+        );
+      } else {
+        this.logger.error(
+          `Claim form submission failed with error: ${ticketCreationResult.error}`
+        );
+        throw new Error(
+          `Claim form submission failed with error: ${ticketCreationResult.error}`
+        );
+      }
+
+      // Return the API response data (contains the persisted row with its ID)
+      // Fall back to the original claimData if the response body wasn't parseable
+      return Result.ok(ticketCreationResult);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       return Result.fail(new Error(message));

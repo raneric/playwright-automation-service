@@ -4,6 +4,17 @@
     {
       "type": "node",
       "request": "attach",
+      "name": "Attach to npm run dev",
+      "port": 9229,
+      "address": "localhost",
+      "localRoot": "${workspaceFolder}",
+      "sourceMaps": true,
+      "restart": true,
+      "continueOnAttach": true
+    },
+    {
+      "type": "node",
+      "request": "attach",
       "name": "Attach to Docker",
       "port": 9229,
       "address": "localhost",
@@ -11,8 +22,8 @@
       "remoteRoot": "/app",
       "sourceMaps": true,
       "sourceMapPathOverrides": {
-        "/app/*": "${workspaceFolder}/*",
-      },
-    },
-  ],
+        "/app/*": "${workspaceFolder}/*"
+      }
+    }
+  ]
 }

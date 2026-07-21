@@ -17,22 +17,27 @@ export class ClaimController {
     const platform = req.params.platform as string;
     const input: ClaimInputDTO = req.body;
 
-    const result = await this.createClaimUseCase.execute(platform, input);
+    const ticketCreationResult = await this.createClaimUseCase.execute(
+      platform,
+      input
+    );
 
-    if (!result.success) {
+    if (!ticketCreationResult.success) {
       res.status(422).json({
         success: false,
         error: {
           code: 'AUTOMATION_ERROR',
-          message: (result.error as Error).message,
+          message: (ticketCreationResult.error as Error).message,
         },
       });
       return;
     }
 
+    const result = { ...input, creationResult: ticketCreationResult.value };
+
     res.status(201).json({
       success: true,
-      data: input,
+      data: result,
     });
   };
 }

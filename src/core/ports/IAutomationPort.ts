@@ -1,6 +1,7 @@
 import { Page } from 'playwright';
 import { Result } from '../../shared/Result';
 import { ProductResult } from '../domain/entities';
+import { TicketCreationOutput } from '../../shared/types/FakeUISaas';
 
 export interface IClaimAutomationPort {
   createClaim(

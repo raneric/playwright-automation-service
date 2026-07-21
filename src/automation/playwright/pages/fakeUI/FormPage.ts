@@ -6,6 +6,7 @@ import { FormConfig } from '../../../config/form/types';
 import { DEFAULT_TIMEOUTS } from '../../../../shared/constants';
 import { Result } from '../../../../shared/Result';
 import { isRetryableStatus, RetryableError } from '../../../../shared/errors';
+import { TicketCreationOutput } from '../../../../shared/types/FakeUISaas';
 
 /**
  * Generic Page Object for any form-driven page.
@@ -53,13 +54,13 @@ export class FormPage extends BasePage {
   }
 
   /**
-   * Click submit, capture the HTTP response status, and return the success message.
+   * Click submit, capture the HTTP response, and return the success message + parsed response body.
    *
-   * - On 2xx: returns the success message text
+   * - On 2xx: returns the success message text and the parsed JSON response body
    * - On retryable status (5xx, 429, 408): throws RetryableError so callers can retry
    * - On non-retryable client errors (4xx): throws a standard Error immediately
    */
-  async submit(): Promise<Result<string>> {
+  async submit(): Promise<Result<TicketCreationOutput>> {
     const submitId = `${this.config.prefix}-${this.config.submitTestId}`;
     const successId = `${this.config.prefix}-${this.config.successTestId}`;
     const serverErrorId = `${this.config.prefix}-${this.config.serverErrorTestId}`;
@@ -110,12 +111,29 @@ export class FormPage extends BasePage {
       throw new Error(message);
     }
 
-    // Extract success message text if the element exists
-    const successText = await this.page
-      .textContent(`[data-testid="${successId}"]`)
-      .then((t) => t?.trim() ?? '');
+    // Parse the API response body to get the persisted data (e.g., the new row ID)
+    let responseData: Record<string, unknown> | undefined;
+    if (response) {
+      try {
+        responseData = await response.json();
+      } catch {
+        // Response body may not be JSON (e.g., redirect, empty body)
+        this.logger.debug('Form submit response body is not JSON');
+      }
+    }
 
-    return Result.ok(successText);
+    const successt = responseData?.success as boolean;
+    const ticketId = responseData?.data?.id as number;
+    const createdAt = responseData?.data?.created_at as string;
+
+    const resultInfo = {
+      ticketCreated: successt,
+      ticketId,
+      createdAt,
+      error: null,
+    };
+
+    return Result.ok(resultInfo);
   }
 
   // ── Private helpers ──────────────────────────────────────────
