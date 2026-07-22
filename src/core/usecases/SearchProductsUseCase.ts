@@ -1,4 +1,4 @@
-import { SearchInputDTO } from '../dto';
+import { ClaimInputDTO, SearchInputDTO } from '../dto';
 import { ISearchAutomationPort, IBrowserSession } from '../ports';
 import { Result } from '../../shared/Result';
 import { Logger } from '../../shared/logger';
@@ -23,7 +23,7 @@ export class SearchProductsUseCase {
 
   async execute(
     platform: string,
-    input: SearchInputDTO
+    claim: ClaimInputDTO
   ): Promise<Result<SearchProductsOutput>> {
     this.logger.info('SearchProductsUseCase: starting');
 
@@ -32,7 +32,7 @@ export class SearchProductsUseCase {
 
     try {
       const automation = this.getSearchAutomation(platform);
-      const result = await automation.searchProducts(page, input.values);
+      const result = await automation.searchProducts(page, claim);
 
       if (!result.success) {
         this.logger.error(

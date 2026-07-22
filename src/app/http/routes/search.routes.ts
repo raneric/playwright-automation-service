@@ -6,7 +6,7 @@ import { searchInputSchema } from '../../../core/dto';
 export function createSearchRoutes(controller: SearchController): Router {
   const router = Router({ mergeParams: true });
 
-  router.post('/', validate(searchInputSchema), controller.search);
+  router.post('/', /*validate(searchInputSchema),*/ controller.search);
 
   return router;
 }

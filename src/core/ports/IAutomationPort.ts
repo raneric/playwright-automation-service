@@ -1,7 +1,8 @@
 import { Page } from 'playwright';
 import { Result } from '../../shared/Result';
 import { ProductResult } from '../domain/entities';
-import { TicketCreationOutput } from '../../shared/types/FakeUISaas';
+import { ClaimInputDTO } from '../dto';
+import { ProductDTO } from '../dto/ClaimDTO';
 
 export interface IClaimAutomationPort {
   createClaim(
@@ -13,6 +14,6 @@ export interface IClaimAutomationPort {
 export interface ISearchAutomationPort {
   searchProducts(
     page: Page,
-    values: string[]
-  ): Promise<Result<ProductResult[]>>;
+    claim: ClaimInputDTO
+  ): Promise<Result<ProductDTO[]>>;
 }

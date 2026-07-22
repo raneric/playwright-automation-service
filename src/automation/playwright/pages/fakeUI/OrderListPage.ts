@@ -117,11 +117,16 @@ export class OrderListPage extends BasePage {
         .textContent(`[data-testid="po-list-row-${index}-quantity-received"]`)
         .then((t) => t?.trim() || '');
 
+      const documentNumber = await this.page
+        .textContent(`[data-testid="po-list-row-${index}-document"]`)
+        .then((t) => t?.trim() || '');
+
       if (itemCode || productName) {
         results.push({
           itemCode,
           productName,
           vendor,
+          documentNumber,
           customerName,
           orderCode,
           orderDate,

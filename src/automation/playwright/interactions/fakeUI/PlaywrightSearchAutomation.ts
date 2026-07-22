@@ -7,6 +7,9 @@ import { ProductResult } from '../../../../core/domain/entities';
 import { OrderListPage } from '../../pages';
 import { gotoWithRetry } from '../../utils';
 import { PagePath } from '../../../../shared/constants';
+import { ClaimInputDTO } from '../../../../core/dto';
+import { ProductDTO } from '../../../../core/dto/ClaimDTO';
+import { stringValueProvided } from '../../utils/valueCheck';
 
 /**
  * Playwright adapter implementing the Search automation port.
@@ -19,10 +22,11 @@ export class PlaywrightSearchAutomation implements ISearchAutomationPort {
 
   async searchProducts(
     page: Page,
-    values: string[]
-  ): Promise<Result<ProductResult[]>> {
+    claim: ClaimInputDTO
+  ): Promise<Result<ProductDTO[]>> {
     try {
       const listPage = new OrderListPage(page, this.logger);
+      const values: string[] = [];
 
       await gotoWithRetry(
         page,
@@ -31,9 +35,10 @@ export class PlaywrightSearchAutomation implements ISearchAutomationPort {
       );
       await listPage.waitForTable();
 
-      const allResults: ProductResult[] = [];
+      const allResults: ProductDTO[] = [];
 
-      for (const term of values) {
+      for (const product of claim.products) {
+        const term = this.extractTerm(product);
         this.logger.info({ term }, 'Searching');
         await listPage.clearSearch();
         await listPage.search(term);
@@ -48,7 +53,15 @@ export class PlaywrightSearchAutomation implements ISearchAutomationPort {
         do {
           this.logger.info({ term, page: pageNum }, 'Extracting products');
           const products = await listPage.extractProducts();
-          allResults.push(...products);
+          const matchResult = this.getMatchedProduct(
+            products,
+            product,
+            claim.customer.organization
+          );
+
+          if (matchResult.found && matchResult.product) {
+            allResults.push(matchResult.product);
+          }
 
           if (await listPage.hasNextPage()) {
             await listPage.clickNext();
@@ -65,5 +78,51 @@ export class PlaywrightSearchAutomation implements ISearchAutomationPort {
       const message = err instanceof Error ? err.message : String(err);
       return Result.fail(new Error(message));
     }
+  }
+
+  private extractTerm(product: ProductDTO): string {
+    if (stringValueProvided(product.orderCode)) {
+      return product.orderCode;
+    }
+
+    if (stringValueProvided(product.lotNumber)) {
+      return product.lotNumber;
+    }
+
+    if (stringValueProvided(product.itemCode)) {
+      return product.itemCode;
+    }
+
+    return product.productName;
+  }
+
+  private getMatchedProduct(
+    products: ProductResult[],
+    product: ProductDTO,
+    customername: string
+  ): { found: boolean; product?: ProductDTO } {
+    const matchedProduct = products.find((p) => {
+      return (
+        p.itemCode === product.itemCode &&
+        p.productName === product.productName &&
+        p.vendor === product.vendor.name &&
+        p.customerName === customername &&
+        p.orderCode === product.orderCode
+      );
+    });
+
+    const mergedProduct: ProductDTO = {
+      ...matchedProduct,
+      lineNumber: product.lineNumber,
+      documentNumber: matchedProduct?.documentNumber || '',
+      vendor: product.vendor,
+    };
+
+    return {
+      found: !!matchedProduct,
+      product: {
+        ...mergedProduct,
+      },
+    };
   }
 }

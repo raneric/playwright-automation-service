@@ -7,7 +7,6 @@ import { FormPage } from '../../pages';
 import { customerClaimConfig } from '../../../config/form';
 import { gotoWithRetry, retry } from '../../utils';
 import { PagePath } from '../../../../shared/constants';
-import { TicketCreationOutput } from '../../../../shared/types/FakeUISaas';
 
 /**
  * Playwright adapter implementing the Claim automation port.

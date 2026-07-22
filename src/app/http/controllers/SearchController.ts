@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { SearchProductsUseCase } from '../../../core/usecases';
 import { Logger } from '../../../shared/logger';
-import { SearchInputDTO } from '../../../core/dto';
+import { ClaimInputDTO, SearchInputDTO } from '../../../core/dto';
 
 export class SearchController {
   constructor(
@@ -11,9 +11,8 @@ export class SearchController {
 
   search = async (req: Request, res: Response): Promise<void> => {
     const platform = req.params.platform as string;
-    const input: SearchInputDTO = req.body;
-
-    const result = await this.searchProductsUseCase.execute(platform, input);
+    const claim: ClaimInputDTO = req.body.claimInput;
+    const result = await this.searchProductsUseCase.execute(platform, claim);
 
     if (!result.success) {
       res.status(422).json({

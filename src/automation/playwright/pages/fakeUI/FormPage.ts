@@ -6,7 +6,10 @@ import { FormConfig } from '../../../config/form/types';
 import { DEFAULT_TIMEOUTS } from '../../../../shared/constants';
 import { Result } from '../../../../shared/Result';
 import { isRetryableStatus, RetryableError } from '../../../../shared/errors';
-import { TicketCreationOutput } from '../../../../shared/types/FakeUISaas';
+import {
+  TicketCreationOutput,
+  TicketSubmissionResult,
+} from '../../../../shared/types/FakeUISaas';
 
 /**
  * Generic Page Object for any form-driven page.
@@ -60,7 +63,7 @@ export class FormPage extends BasePage {
    * - On retryable status (5xx, 429, 408): throws RetryableError so callers can retry
    * - On non-retryable client errors (4xx): throws a standard Error immediately
    */
-  async submit(): Promise<Result<TicketCreationOutput>> {
+  async submit(): Promise<Result<TicketSubmissionResult>> {
     const submitId = `${this.config.prefix}-${this.config.submitTestId}`;
     const successId = `${this.config.prefix}-${this.config.successTestId}`;
     const serverErrorId = `${this.config.prefix}-${this.config.serverErrorTestId}`;
@@ -112,7 +115,7 @@ export class FormPage extends BasePage {
     }
 
     // Parse the API response body to get the persisted data (e.g., the new row ID)
-    let responseData: Record<string, unknown> | undefined;
+    let responseData: TicketCreationOutput | null = null;
     if (response) {
       try {
         responseData = await response.json();

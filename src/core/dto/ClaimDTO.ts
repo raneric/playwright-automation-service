@@ -30,7 +30,7 @@ const verifiedFromAttachmentSchema = z.object({
 });
 
 // ── Product Line ───────────────────────────────────────────────
-const productLineSchema = z.object({
+const productSchema = z.object({
   lineNumber: z.number().int().nonnegative(),
   documentNumber: z.string().min(1),
   productName: z.string().min(1),
@@ -59,8 +59,9 @@ export const claimInputSchema = z.object({
   customer: customerSchema,
   issues: z.string(),
   products: z
-    .array(productLineSchema)
+    .array(productSchema)
     .min(1, 'At least one product line is required'),
 });
 
 export type ClaimInputDTO = z.infer<typeof claimInputSchema>;
+export type ProductDTO = z.infer<typeof productSchema>;
