@@ -25,9 +25,23 @@ export class SearchController {
       return;
     }
 
+    const searchResult = {
+      totalMatched: result.value.matchedProducts.length,
+      totalProduct: claim.products.length,
+      success: result.value.matchedProducts.length === claim.products.length,
+      totalNotFound:
+        claim.products.length - result.value.matchedProducts.length,
+    };
+
+    const finalResult = {
+      ...claim,
+      productFromSearch: result.value,
+      searchResult,
+    };
+
     res.status(200).json({
       success: true,
-      data: result.value,
+      data: finalResult,
     });
   };
 }

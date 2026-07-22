@@ -4,9 +4,11 @@ import { Result } from '../../shared/Result';
 import { Logger } from '../../shared/logger';
 import { AutomationError } from '../../shared/errors';
 import { ProductResult } from '../domain/entities';
+import { ProductDTO } from '../dto/ClaimDTO';
 
-export interface SearchProductsOutput {
-  products: ProductResult[];
+export interface ProductSearchOutput {
+  unmatchedProducts: ProductResult[];
+  matchedProducts: ProductDTO[];
 }
 
 /**
@@ -24,7 +26,7 @@ export class SearchProductsUseCase {
   async execute(
     platform: string,
     claim: ClaimInputDTO
-  ): Promise<Result<SearchProductsOutput>> {
+  ): Promise<Result<ProductSearchOutput>> {
     this.logger.info('SearchProductsUseCase: starting');
 
     const { page } =
@@ -43,11 +45,11 @@ export class SearchProductsUseCase {
       }
 
       this.logger.info(
-        { platform, count: result.value.length },
+        { platform, count: result.value.matchedProducts.length },
         'SearchProductsUseCase: completed'
       );
 
-      return Result.ok({ products: result.value });
+      return Result.ok(result.value);
     } finally {
       await this.browserSession.releaseSession(page.context(), page);
     }

@@ -10,6 +10,8 @@ import { PagePath } from '../../../../shared/constants';
 import { ClaimInputDTO } from '../../../../core/dto';
 import { ProductDTO } from '../../../../core/dto/ClaimDTO';
 import { stringValueProvided } from '../../utils/valueCheck';
+import { SearchTerm } from '../../../../shared/types/FakeUISaas';
+import { ProductSearchOutput } from '../../../../core/usecases/SearchProductsUseCase';
 
 /**
  * Playwright adapter implementing the Search automation port.
@@ -23,10 +25,9 @@ export class PlaywrightSearchAutomation implements ISearchAutomationPort {
   async searchProducts(
     page: Page,
     claim: ClaimInputDTO
-  ): Promise<Result<ProductDTO[]>> {
+  ): Promise<Result<ProductSearchOutput>> {
     try {
       const listPage = new OrderListPage(page, this.logger);
-      const values: string[] = [];
 
       await gotoWithRetry(
         page,
@@ -35,13 +36,14 @@ export class PlaywrightSearchAutomation implements ISearchAutomationPort {
       );
       await listPage.waitForTable();
 
-      const allResults: ProductDTO[] = [];
+      const allMatchedResults: ProductDTO[] = [];
+      const allSearchResult: ProductResult[] = [];
 
       for (const product of claim.products) {
         const term = this.extractTerm(product);
         this.logger.info({ term }, 'Searching');
         await listPage.clearSearch();
-        await listPage.search(term);
+        await listPage.search(term.value);
 
         if (await listPage.hasNoResults()) {
           this.logger.info({ term }, 'No results');
@@ -53,6 +55,13 @@ export class PlaywrightSearchAutomation implements ISearchAutomationPort {
         do {
           this.logger.info({ term, page: pageNum }, 'Extracting products');
           const products = await listPage.extractProducts();
+
+          /**
+           * TODO:
+           * Strore umatched products in a separate array.
+           * Return both matched and unmatched products in the final result.
+           */
+
           const matchResult = this.getMatchedProduct(
             products,
             product,
@@ -60,8 +69,10 @@ export class PlaywrightSearchAutomation implements ISearchAutomationPort {
           );
 
           if (matchResult.found && matchResult.product) {
-            allResults.push(matchResult.product);
+            allMatchedResults.push(matchResult.product);
           }
+
+          allSearchResult.push(...products);
 
           if (await listPage.hasNextPage()) {
             await listPage.clickNext();
@@ -72,28 +83,43 @@ export class PlaywrightSearchAutomation implements ISearchAutomationPort {
         } while (true);
       }
 
-      this.logger.info({ count: allResults.length }, 'Search complete');
-      return Result.ok(allResults);
+      this.logger.info({ count: allMatchedResults.length }, 'Search complete');
+      return Result.ok({
+        unmatchedProducts: allSearchResult,
+        matchedProducts: allMatchedResults,
+      });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       return Result.fail(new Error(message));
     }
   }
 
-  private extractTerm(product: ProductDTO): string {
+  private extractTerm(product: ProductDTO): SearchTerm {
     if (stringValueProvided(product.orderCode)) {
-      return product.orderCode;
+      return {
+        type: 'orderCode',
+        value: product.orderCode,
+      };
     }
 
     if (stringValueProvided(product.lotNumber)) {
-      return product.lotNumber;
+      return {
+        type: 'lotNumber',
+        value: product.lotNumber,
+      };
     }
 
     if (stringValueProvided(product.itemCode)) {
-      return product.itemCode;
+      return {
+        type: 'itemCode',
+        value: product.itemCode,
+      };
     }
 
-    return product.productName;
+    return {
+      type: 'productName',
+      value: product.productName,
+    };
   }
 
   private getMatchedProduct(
@@ -105,24 +131,42 @@ export class PlaywrightSearchAutomation implements ISearchAutomationPort {
       return (
         p.itemCode === product.itemCode &&
         p.productName === product.productName &&
-        p.vendor === product.vendor.name &&
+        p.vendor === product.vendor &&
         p.customerName === customername &&
         p.orderCode === product.orderCode
       );
     });
 
-    const mergedProduct: ProductDTO = {
-      ...matchedProduct,
-      lineNumber: product.lineNumber,
-      documentNumber: matchedProduct?.documentNumber || '',
-      vendor: product.vendor,
-    };
+    const mergedProduct = this.mergeMatchedAndProduct(matchedProduct, product);
 
     return {
       found: !!matchedProduct,
-      product: {
-        ...mergedProduct,
-      },
+      product: mergedProduct,
+    };
+  }
+
+  private mergeMatchedAndProduct(
+    matched?: ProductResult,
+    product?: ProductDTO
+  ): ProductDTO | undefined {
+    if (!product) return undefined;
+
+    return {
+      // fields that exist on ProductDTO but may be overridden by matched values
+      lineNumber: product.lineNumber,
+      documentNumber: matched?.documentNumber ?? product.documentNumber,
+      productName: matched?.productName ?? product.productName,
+      itemCode: matched?.itemCode ?? product.itemCode,
+      lotNumber: matched?.lotNumber ?? product.lotNumber,
+      quantityOrdered: matched?.quantityOrdered ?? product.quantityOrdered,
+      quantityBilled: matched?.quantityBilled ?? product.quantityBilled,
+      quantityReceived: matched?.quantityReceived ?? product.quantityReceived,
+      orderCode: matched?.orderCode ?? product.orderCode,
+      orderDate: matched?.orderDate ?? product.orderDate,
+      vendor: matched?.vendor ?? product.vendor,
+      status: product.status,
+      existsInSystem: true,
+      verifiedFromAttachment: product.verifiedFromAttachment,
     };
   }
 }

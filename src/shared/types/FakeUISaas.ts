@@ -14,3 +14,8 @@ export type TicketCreationOutput = {
   success: boolean;
   data: Claim;
 };
+
+export type SearchTerm = {
+  type: 'orderCode' | 'lotNumber' | 'itemCode' | 'productName';
+  value: string;
+};

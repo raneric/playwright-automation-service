@@ -130,11 +130,10 @@ export class OrderListPage extends BasePage {
           customerName,
           orderCode,
           orderDate,
-          lostNumber,
+          lotNumber: lostNumber,
           quantityOrdered: Number(quantityOrdered),
           quantityBilled: Number(quantityBilled),
           quantityReceived: Number(quantityReceived),
-          existsInSystem: true,
         });
       }
     }

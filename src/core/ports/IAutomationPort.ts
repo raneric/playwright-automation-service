@@ -15,5 +15,10 @@ export interface ISearchAutomationPort {
   searchProducts(
     page: Page,
     claim: ClaimInputDTO
-  ): Promise<Result<ProductDTO[]>>;
+  ): Promise<
+    Result<{
+      unmatchedProducts: ProductResult[];
+      matchedProducts: ProductDTO[];
+    }>
+  >;
 }
