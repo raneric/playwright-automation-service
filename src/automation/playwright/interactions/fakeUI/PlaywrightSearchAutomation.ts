@@ -130,7 +130,6 @@ export class PlaywrightSearchAutomation implements ISearchAutomationPort {
     const matchedProduct = products.find((p) => {
       return (
         p.itemCode === product.itemCode &&
-        p.productName === product.productName &&
         p.vendor === product.vendor &&
         p.customerName === customername &&
         p.orderCode === product.orderCode
