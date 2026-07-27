@@ -116,7 +116,6 @@ export class OrderListPage extends BasePage {
       const quantityReceived = await this.page
         .textContent(`[data-testid="po-list-row-${index}-quantity-received"]`)
         .then((t) => t?.trim() || '');
-
       const documentNumber = await this.page
         .textContent(`[data-testid="po-list-row-${index}-document"]`)
         .then((t) => t?.trim() || '');

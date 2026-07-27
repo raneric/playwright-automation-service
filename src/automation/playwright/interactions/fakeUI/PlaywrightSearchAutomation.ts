@@ -56,12 +56,6 @@ export class PlaywrightSearchAutomation implements ISearchAutomationPort {
           this.logger.info({ term, page: pageNum }, 'Extracting products');
           const products = await listPage.extractProducts();
 
-          /**
-           * TODO:
-           * Strore umatched products in a separate array.
-           * Return both matched and unmatched products in the final result.
-           */
-
           const matchResult = this.getMatchedProduct(
             products,
             product,
