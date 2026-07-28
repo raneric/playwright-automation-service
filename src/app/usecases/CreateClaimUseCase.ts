@@ -76,8 +76,7 @@ export class CreateClaimUseCase {
         requestor: input.requestInfo.requestor,
       },
       vendor: {
-        id: firstVendor?.id ?? 0,
-        name: firstVendor?.name ?? '',
+        name: firstVendor ?? '',
         email: '',
         phone: '',
         street: '',
@@ -104,7 +103,7 @@ export class CreateClaimUseCase {
         product_name: pl.productName,
         order_code: pl.orderCode,
         lot_number: pl.lotNumber,
-        vendor_name: pl.vendor.name,
+        vendor_name: pl.vendor,
         order_date: pl.orderDate,
       })),
     };
