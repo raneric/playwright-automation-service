@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
-import { SearchProductsUseCase } from '../../../core/usecases';
+import { SearchProductsUseCase } from '../../usecases';
 import { Logger } from '../../../shared/logger';
-import { ClaimInputDTO, SearchInputDTO } from '../../../core/dto';
+import { ClaimInputDTO, SearchInputDTO } from '../../dto';
 
 export class SearchController {
   constructor(

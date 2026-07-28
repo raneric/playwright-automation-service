@@ -1,17 +1,16 @@
 import { Page } from 'playwright';
-import { ISearchAutomationPort } from '../../../../core/ports';
 import { Logger } from '../../../../shared/logger';
 import { PlatformConfig } from '../../../config';
 import { Result } from '../../../../shared/Result';
-import { ProductResult } from '../../../../core/domain/entities';
 import { OrderListPage } from '../../pages';
 import { gotoWithRetry } from '../../utils';
 import { PagePath } from '../../../../shared/constants';
-import { ClaimInputDTO } from '../../../../core/dto';
-import { ProductDTO } from '../../../../core/dto/ClaimDTO';
+import { ClaimInputDTO } from '../../../../app/dto';
+import { ProductDTO } from '../../../../app/dto/ClaimDTO';
 import { stringValueProvided } from '../../utils/valueCheck';
-import { SearchTerm } from '../../../../shared/types/FakeUISaas';
-import { ProductSearchOutput } from '../../../../core/usecases/SearchProductsUseCase';
+import { ProductResult, SearchTerm } from '../../../../shared/types/FakeUISaas';
+import { ProductSearchOutput } from '../../../../app/usecases/SearchProductsUseCase';
+import { ISearchAutomationPort } from '../../../ports';
 
 /**
  * Playwright adapter implementing the Search automation port.

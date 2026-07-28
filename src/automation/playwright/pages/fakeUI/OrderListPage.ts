@@ -2,7 +2,7 @@ import { Page } from 'playwright';
 import { BasePage } from './BasePage';
 import { Logger } from '../../../../shared/logger';
 import { DEFAULT_TIMEOUTS } from '../../../../shared/constants';
-import { ProductResult } from '../../../../core/domain/entities';
+import { ProductResult } from '../../../../shared/types/FakeUISaas';
 
 /**
  * Page Object for the Purchase Order List page.

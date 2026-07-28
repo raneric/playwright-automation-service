@@ -1,9 +1,7 @@
 import { Page } from 'playwright';
 import { Result } from '../../shared/Result';
-import { ProductResult } from '../domain/entities';
-import { ClaimInputDTO } from '../dto';
-import { ProductDTO } from '../dto/ClaimDTO';
-import { ProductSearchOutput } from '../usecases/SearchProductsUseCase';
+import { ProductSearchOutput } from '../../app/usecases/SearchProductsUseCase';
+import { ClaimInputDTO } from '../../app/dto';
 
 export interface IClaimAutomationPort {
   createClaim(

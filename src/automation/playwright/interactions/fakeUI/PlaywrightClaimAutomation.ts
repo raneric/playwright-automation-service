@@ -1,5 +1,4 @@
 import { Page } from 'playwright';
-import { IClaimAutomationPort } from '../../../../core/ports';
 import { Logger } from '../../../../shared/logger';
 import { PlatformConfig } from '../../../config';
 import { Result } from '../../../../shared/Result';
@@ -7,6 +6,7 @@ import { FormPage } from '../../pages';
 import { customerClaimConfig } from '../../../config/form';
 import { gotoWithRetry, retry } from '../../utils';
 import { PagePath } from '../../../../shared/constants';
+import { IClaimAutomationPort } from '../../../ports';
 
 /**
  * Playwright adapter implementing the Claim automation port.

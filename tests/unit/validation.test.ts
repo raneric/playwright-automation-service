@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import { expect } from 'playwright/test';
-import { ClaimInputDTO, claimInputSchema } from '../../src/core/dto';
+import { ClaimInputDTO, claimInputSchema } from '../../src/app/dto';
 
 describe('ClaimInputDTO validation', () => {
   const validInput: ClaimInputDTO = {
@@ -34,7 +34,7 @@ describe('ClaimInputDTO validation', () => {
         quantityOrdered: 100,
         quantityBilled: 100,
         quantityReceived: 95,
-        vendor: { name: 'Vendor Inc', id: 1 },
+        vendor: 'Vendor Inc',
         status: 'received',
         existsInSystem: true,
         verifiedFromAttachment: {

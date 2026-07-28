@@ -13,11 +13,14 @@ import {
   PlaywrightSearchAutomation,
   PlaywrightLoginWorkflow,
 } from '../../automation/playwright/interactions';
-import { CreateClaimUseCase } from '../../core/usecases/CreateClaimUseCase';
-import { SearchProductsUseCase } from '../../core/usecases/SearchProductsUseCase';
+import { CreateClaimUseCase } from '../usecases/CreateClaimUseCase';
+import { SearchProductsUseCase } from '../usecases/SearchProductsUseCase';
 import { ClaimController } from '../http/controllers/ClaimController';
 import { SearchController } from '../http/controllers/SearchController';
-import { IClaimAutomationPort, ISearchAutomationPort } from '../../core/ports';
+import {
+  IClaimAutomationPort,
+  ISearchAutomationPort,
+} from '../../automation/ports';
 
 /**
  * Build the Awilix DI container.

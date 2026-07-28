@@ -1,8 +1,8 @@
 import { ClaimInputDTO } from '../dto';
-import { IClaimAutomationPort, IBrowserSession } from '../ports';
 import { Result } from '../../shared/Result';
 import { Logger } from '../../shared/logger';
 import { AutomationError } from '../../shared/errors';
+import { IBrowserSession, IClaimAutomationPort } from '../../automation/ports';
 
 /**
  * Use case: Create a customer claim in the SaaS application.
@@ -35,8 +35,9 @@ export class CreateClaimUseCase {
     const formData = this.toFormData(input);
 
     // 2. Acquire authenticated session for the target platform
-    const { page } =
-      await this.browserSession.createAuthenticatedSession(platform);
+    const { page } = await this.browserSession.createAuthenticatedSession(
+      platform
+    );
 
     try {
       // 3. Execute automation (resolved per-platform)

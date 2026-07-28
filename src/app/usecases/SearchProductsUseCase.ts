@@ -1,10 +1,10 @@
 import { ClaimInputDTO, SearchInputDTO } from '../dto';
-import { ISearchAutomationPort, IBrowserSession } from '../ports';
 import { Result } from '../../shared/Result';
 import { Logger } from '../../shared/logger';
 import { AutomationError } from '../../shared/errors';
-import { ProductResult } from '../domain/entities';
 import { ProductDTO } from '../dto/ClaimDTO';
+import { IBrowserSession, ISearchAutomationPort } from '../../automation/ports';
+import { ProductResult } from '../../shared/types/FakeUISaas';
 
 export interface ProductSearchOutput {
   allProductsFromSearch: ProductResult[];
@@ -35,8 +35,9 @@ export class SearchProductsUseCase {
   ): Promise<Result<ProductSearchOutput>> {
     this.logger.info('SearchProductsUseCase: starting');
 
-    const { page } =
-      await this.browserSession.createAuthenticatedSession(platform);
+    const { page } = await this.browserSession.createAuthenticatedSession(
+      platform
+    );
 
     try {
       const automation = this.getSearchAutomation(platform);
