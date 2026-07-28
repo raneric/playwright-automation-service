@@ -7,8 +7,14 @@ import { ProductResult } from '../domain/entities';
 import { ProductDTO } from '../dto/ClaimDTO';
 
 export interface ProductSearchOutput {
-  unmatchedProducts: ProductResult[];
+  allProductsFromSearch: ProductResult[];
+  unmatchedProducts: ProductDTO[];
   matchedProducts: ProductDTO[];
+  reconciliationResult: {
+    totalProduct: number;
+    totalReconciledProduct: number;
+    success: boolean;
+  };
 }
 
 /**

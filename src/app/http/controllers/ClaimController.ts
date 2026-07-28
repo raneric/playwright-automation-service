@@ -33,7 +33,10 @@ export class ClaimController {
       return;
     }
 
-    const result = { ...input, creationResult: ticketCreationResult.value };
+    const result = {
+      ...input,
+      ticketCreationResult: ticketCreationResult.value,
+    };
 
     res.status(201).json({
       success: true,

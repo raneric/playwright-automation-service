@@ -37,16 +37,18 @@ export class PlaywrightSearchAutomation implements ISearchAutomationPort {
       await listPage.waitForTable();
 
       const allMatchedResults: ProductDTO[] = [];
+      const unmatchedResults: ProductDTO[] = [];
       const allSearchResult: ProductResult[] = [];
 
-      for (const product of claim.products) {
-        const term = this.extractTerm(product);
+      for (const productFromClaim of claim.products) {
+        const term = this.extractTerm(productFromClaim);
         this.logger.info({ term }, 'Searching');
         await listPage.clearSearch();
         await listPage.search(term.value);
 
         if (await listPage.hasNoResults()) {
           this.logger.info({ term }, 'No results');
+          unmatchedResults.push(productFromClaim);
           continue;
         }
 
@@ -54,19 +56,21 @@ export class PlaywrightSearchAutomation implements ISearchAutomationPort {
         let pageNum = 1;
         do {
           this.logger.info({ term, page: pageNum }, 'Extracting products');
-          const products = await listPage.extractProducts();
+          const productsFromSearch = await listPage.extractProducts();
 
           const matchResult = this.getMatchedProduct(
-            products,
-            product,
+            productsFromSearch,
+            productFromClaim,
             claim.customer.organization
           );
 
           if (matchResult.found && matchResult.product) {
             allMatchedResults.push(matchResult.product);
+          } else {
+            unmatchedResults.push(productFromClaim);
           }
 
-          allSearchResult.push(...products);
+          allSearchResult.push(...productsFromSearch);
 
           if (await listPage.hasNextPage()) {
             await listPage.clickNext();
@@ -79,8 +83,14 @@ export class PlaywrightSearchAutomation implements ISearchAutomationPort {
 
       this.logger.info({ count: allMatchedResults.length }, 'Search complete');
       return Result.ok({
-        unmatchedProducts: allSearchResult,
+        allProductsFromSearch: allSearchResult,
         matchedProducts: allMatchedResults,
+        unmatchedProducts: unmatchedResults,
+        reconciliationResult: {
+          totalProduct: claim.products.length,
+          totalReconciledProduct: allMatchedResults.length,
+          success: allMatchedResults.length === claim.products.length,
+        },
       });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);

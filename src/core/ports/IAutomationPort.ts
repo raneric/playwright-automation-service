@@ -3,6 +3,7 @@ import { Result } from '../../shared/Result';
 import { ProductResult } from '../domain/entities';
 import { ClaimInputDTO } from '../dto';
 import { ProductDTO } from '../dto/ClaimDTO';
+import { ProductSearchOutput } from '../usecases/SearchProductsUseCase';
 
 export interface IClaimAutomationPort {
   createClaim(
@@ -15,10 +16,5 @@ export interface ISearchAutomationPort {
   searchProducts(
     page: Page,
     claim: ClaimInputDTO
-  ): Promise<
-    Result<{
-      unmatchedProducts: ProductResult[];
-      matchedProducts: ProductDTO[];
-    }>
-  >;
+  ): Promise<Result<ProductSearchOutput>>;
 }

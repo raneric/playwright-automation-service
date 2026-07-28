@@ -125,12 +125,12 @@ export class FormPage extends BasePage {
       }
     }
 
-    const successt = responseData?.success as boolean;
+    const success = responseData?.success as boolean;
     const ticketId = responseData?.data?.id as number;
     const createdAt = responseData?.data?.created_at as string;
 
     const resultInfo = {
-      ticketCreated: successt,
+      ticketCreated: success,
       ticketId,
       createdAt,
       error: null,
