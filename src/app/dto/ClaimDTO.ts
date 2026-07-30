@@ -31,14 +31,14 @@ const verifiedFromAttachmentSchema = z.object({
 
 // ── Product Line ───────────────────────────────────────────────
 const productSchema = z.object({
-  lineNumber: z.number().int().nonnegative(),
+  lineNumber: z.number().int().nonnegative().nullable(),
   documentNumber: z.string().min(1),
   productName: z.string().min(1),
   itemCode: z.string().min(1),
   lotNumber: z.string().min(1),
-  quantityOrdered: z.number().nonnegative(),
-  quantityBilled: z.number().nonnegative(),
-  quantityReceived: z.number().nonnegative(),
+  quantityOrdered: z.number().nonnegative().nullable(),
+  quantityBilled: z.number().nonnegative().nullable(),
+  quantityReceived: z.number().nonnegative().nullable(),
   orderCode: z.string().min(1),
   orderDate: z.string().min(1),
   vendor: z.string(),

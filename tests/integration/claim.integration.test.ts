@@ -16,8 +16,7 @@ import { buildContainer } from '../../src/app/config/container';
 import { loadConfig } from '../../src/automation/config';
 import { createLogger } from '../../src/shared/logger';
 import { Result } from '../../src/shared/Result';
-import { beforeEach, describe, it } from 'node:test';
-import { expect } from '@jest/globals';
+import type { Express } from 'express';
 
 // ── Mock objects ──────────────────────────────────────────────────────────────
 
@@ -63,7 +62,7 @@ const mockLoginWorkflow = {
 
 // ── App factory ───────────────────────────────────────────────────────────────
 
-function buildTestApp() {
+function buildTestApp(): Express {
   const config = loadConfig();
   const logger = createLogger({ level: 'silent', pretty: false });
 
@@ -89,8 +88,6 @@ function buildTestApp() {
 
 const validClaimPayload = {
   requestInfo: { dateOfRequest: '2026-01-15', requestor: 'John Doe' },
-  orderCode: 'ORD-001',
-  orderDate: '2026-01-10',
   customer: {
     name: 'Acme Corp',
     organization: 'Engineering',
@@ -105,18 +102,25 @@ const validClaimPayload = {
     email: 'acme@example.com',
   },
   issues: 'Damaged on arrival',
-  productLines: [
+  products: [
     {
       lineNumber: 1,
       documentNumber: 'DOC-001',
       productName: 'Widget A',
       itemCode: 'W-001',
       lotNumber: 'L-001',
+      orderCode: 'ORD-001',
+      orderDate: '2026-01-10',
       quantityOrdered: 100,
       quantityBilled: 100,
       quantityReceived: 95,
-      vendor: { name: 'Vendor Inc', id: 1 },
+      vendor: 'Vendor Inc',
       status: 'received',
+      existsInSystem: true,
+      verifiedFromAttachment: {
+        attachmentName: 'N/A',
+        attachmentType: 'N/A',
+      },
     },
   ],
 };
@@ -124,7 +128,7 @@ const validClaimPayload = {
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 describe('POST /api/:platform/claim', () => {
-  let app: ReturnType<typeof buildTestApp>;
+  let app: Express;
 
   beforeAll(() => {
     app = buildTestApp();
@@ -147,7 +151,7 @@ describe('POST /api/:platform/claim', () => {
       .expect(201);
 
     expect(res.body.success).toBe(true);
-    expect(res.body.data.claimId).toBe('CC-001');
+    expect(res.body.data.ticketCreationResult).toBe('CC-001');
     expect(mockBrowserSession.createAuthenticatedSession).toHaveBeenCalledTimes(
       1
     );
@@ -169,10 +173,10 @@ describe('POST /api/:platform/claim', () => {
     expect(mockClaimAutomation.createClaim).not.toHaveBeenCalled();
   });
 
-  it('returns 400 when productLines is empty', async () => {
+  it('returns 400 when products is empty', async () => {
     const res = await request(app)
       .post('/api/default/claim')
-      .send({ ...validClaimPayload, productLines: [] })
+      .send({ ...validClaimPayload, products: [] })
       .expect(400);
 
     expect(res.body.success).toBe(false);
