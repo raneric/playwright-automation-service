@@ -302,6 +302,10 @@ All configuration is loaded from environment variables via `src/automation/confi
 | `BROWSER_VIEWPORT_WIDTH` | `1280` | Browser viewport width |
 | `BROWSER_VIEWPORT_HEIGHT` | `720` | Browser viewport height |
 | `BROWSER_MAX_CONTEXTS` | `5` | Max concurrent browser contexts |
+| `NETWORK_OFFLINE` | `false` | Simulate offline mode (`true`/`false`) |
+| `NETWORK_DOWNLOAD_KBPS` | `0` | Download speed limit in kbps (0 = unlimited) |
+| `NETWORK_UPLOAD_KBPS` | `0` | Upload speed limit in kbps (0 = unlimited) |
+| `NETWORK_LATENCY_MS` | `0` | Round-trip latency in ms (0 = none) |
 | `API_KEY` | *(none)* | Optional API key for authentication |
 
 Copy `.env.example` to `.env` and adjust values for your environment.

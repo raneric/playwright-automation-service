@@ -69,8 +69,21 @@ export class BrowserManager implements IBrowserSession {
 
     try {
       const browser = await this.getBrowser();
+      const { network } = this.config;
+
       const context = await browser.newContext({
         viewport: this.config.browser.viewport,
+        // Network throttling — simulates slow connections like Chrome DevTools
+        offline: network.offline || undefined,
+        ...(network.downloadThroughput > 0 && {
+          download_throughput: network.downloadThroughput,
+        }),
+        ...(network.uploadThroughput > 0 && {
+          upload_throughput: network.uploadThroughput,
+        }),
+        ...(network.latency > 0 && {
+          latency: network.latency,
+        }),
       });
       this.activeContexts.add(context);
       const page = await context.newPage();

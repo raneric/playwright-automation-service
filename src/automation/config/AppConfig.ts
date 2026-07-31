@@ -34,6 +34,18 @@ export interface AppConfig {
     /** Maximum number of concurrent browser contexts */
     maxConcurrentContexts: number;
   };
+
+  /** Network throttling — simulates slow connections like DevTools */
+  network: {
+    /** Set to true to simulate offline mode */
+    offline: boolean;
+    /** Download speed in bytes per second (0 = unlimited) */
+    downloadThroughput: number;
+    /** Upload speed in bytes per second (0 = unlimited) */
+    uploadThroughput: number;
+    /** Round-trip latency in milliseconds (0 = none) */
+    latency: number;
+  };
 }
 
 function envStr(key: string, fallback: string): string {
@@ -120,6 +132,13 @@ export function loadConfig(): AppConfig {
         height: envInt('BROWSER_VIEWPORT_HEIGHT', 720),
       },
       maxConcurrentContexts: envInt('BROWSER_MAX_CONTEXTS', 5),
+    },
+
+    network: {
+      offline: envBool('NETWORK_OFFLINE', false),
+      downloadThroughput: envInt('NETWORK_DOWNLOAD_KBPS', 0) * 1024,
+      uploadThroughput: envInt('NETWORK_UPLOAD_KBPS', 0) * 1024,
+      latency: envInt('NETWORK_LATENCY_MS', 0),
     },
   };
 }
