@@ -39,8 +39,25 @@ export class PlaywrightSearchAutomation implements ISearchAutomationPort {
       const unmatchedResults: ProductDTO[] = [];
       const allSearchResult: ProductResult[] = [];
 
+      const searchedTerms = new Set<string>();
+
       for (const productFromClaim of claim.products) {
         const term = this.extractTerm(productFromClaim);
+
+        // Cache hit: term already searched — reuse existing results
+        if (searchedTerms.has(term.value)) {
+          this.classifyResult(
+            allSearchResult,
+            productFromClaim,
+            claim.customer.organization,
+            allMatchedResults,
+            unmatchedResults
+          );
+          continue;
+        }
+
+        searchedTerms.add(term.value);
+
         this.logger.info({ term }, 'Searching');
         await listPage.clearSearch();
         await listPage.search(term.value);
@@ -51,25 +68,27 @@ export class PlaywrightSearchAutomation implements ISearchAutomationPort {
           continue;
         }
 
-        // Extract results from the current page and all subsequent pages
+        // Paginate through results, stopping early when a match is found
+        let matchFound = false;
         let pageNum = 1;
+
         do {
           this.logger.info({ term, page: pageNum }, 'Extracting products');
           const productsFromSearch = await listPage.extractProducts();
-
-          const matchResult = this.getMatchedProduct(
-            productsFromSearch,
-            productFromClaim,
-            claim.customer.organization
-          );
-
-          if (matchResult.found && matchResult.product) {
-            allMatchedResults.push(matchResult.product);
-          } else {
-            unmatchedResults.push(productFromClaim);
-          }
-
           allSearchResult.push(...productsFromSearch);
+
+          if (!matchFound) {
+            const matchResult = this.getMatchedProduct(
+              productsFromSearch,
+              productFromClaim,
+              claim.customer.organization
+            );
+
+            if (matchResult.found && matchResult.product) {
+              allMatchedResults.push(matchResult.product);
+              matchFound = true;
+            }
+          }
 
           if (await listPage.hasNextPage()) {
             await listPage.clickNext();
@@ -77,7 +96,11 @@ export class PlaywrightSearchAutomation implements ISearchAutomationPort {
           } else {
             break;
           }
-        } while (true);
+        } while (!matchFound);
+
+        if (!matchFound) {
+          unmatchedResults.push(productFromClaim);
+        }
       }
 
       this.logger.info({ count: allMatchedResults.length }, 'Search complete');
@@ -123,6 +146,27 @@ export class PlaywrightSearchAutomation implements ISearchAutomationPort {
       type: 'productName',
       value: product.productName,
     };
+  }
+
+  /**
+   * Classify a single product as matched or unmatched and push to the
+   * appropriate array. Extracted to eliminate duplicated logic between
+   * the cache-hit path and the fresh-search path.
+   */
+  private classifyResult(
+    results: ProductResult[],
+    product: ProductDTO,
+    customerName: string,
+    matched: ProductDTO[],
+    unmatched: ProductDTO[]
+  ): void {
+    const matchResult = this.getMatchedProduct(results, product, customerName);
+
+    if (matchResult.found && matchResult.product) {
+      matched.push(matchResult.product);
+    } else {
+      unmatched.push(product);
+    }
   }
 
   private getMatchedProduct(
