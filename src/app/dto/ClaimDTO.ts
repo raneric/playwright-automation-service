@@ -44,6 +44,7 @@ const productSchema = z.object({
   vendor: z.string(),
   status: z.string().min(1),
   existsInSystem: z.boolean(),
+  comments: z.string().optional(),
   verifiedFromAttachment: verifiedFromAttachmentSchema,
 });
 

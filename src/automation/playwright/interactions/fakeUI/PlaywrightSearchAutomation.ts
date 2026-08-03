@@ -211,6 +211,7 @@ export class PlaywrightSearchAutomation implements ISearchAutomationPort {
       orderDate: matched?.orderDate ?? product.orderDate,
       vendor: matched?.vendor ?? product.vendor,
       status: product.status,
+      comments: product.comments ?? '',
       existsInSystem: true,
       verifiedFromAttachment: product.verifiedFromAttachment,
     };
