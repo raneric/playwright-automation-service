@@ -69,7 +69,7 @@ function buildTestApp(): Express {
   // Build the real container then override infrastructure with mocks.
   const container = buildContainer(config, logger);
   container.register({
-    browserSession: asValue(mockBrowserSession),
+    browserManager: asValue(mockBrowserSession),
     // Override per-platform factories with mocks that ignore the platform arg
     getLoginWorkflow: asValue(() => mockLoginWorkflow),
     getClaimAutomation: asValue(() => mockClaimAutomation),

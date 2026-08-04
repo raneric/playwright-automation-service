@@ -10,7 +10,7 @@ import { ProductSearchOutput } from '../../shared/types/FakeUISaas';
  */
 export class SearchProductsUseCase {
   constructor(
-    private readonly browserSession: IBrowserSession,
+    private readonly browserManager: IBrowserSession,
     private readonly getSearchAutomation: (
       platform: string
     ) => ISearchAutomationPort,
@@ -24,7 +24,7 @@ export class SearchProductsUseCase {
     this.logger.info('SearchProductsUseCase: starting');
 
     const { page } =
-      await this.browserSession.createAuthenticatedSession(platform);
+      await this.browserManager.createAuthenticatedSession(platform);
 
     try {
       const automation = this.getSearchAutomation(platform);
@@ -45,7 +45,7 @@ export class SearchProductsUseCase {
 
       return Result.ok(result.value);
     } finally {
-      await this.browserSession.releaseSession(page.context(), page);
+      await this.browserManager.releaseSession(page.context(), page);
     }
   }
 }

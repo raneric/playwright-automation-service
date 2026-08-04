@@ -15,7 +15,7 @@ import { IBrowserSession, IClaimAutomationPort } from '../../shared/ports';
  */
 export class CreateClaimUseCase {
   constructor(
-    private readonly browserSession: IBrowserSession,
+    private readonly browserManager: IBrowserSession,
     private readonly getClaimAutomation: (
       platform: string
     ) => IClaimAutomationPort,
@@ -27,7 +27,7 @@ export class CreateClaimUseCase {
     input: ClaimInputDTO
   ): Promise<Result<Record<string, unknown>>> {
     this.logger.info(
-      { platform, orderCode: input.customer },
+      { platform, orderCode: input.customer.organization },
       'CreateClaimUseCase: starting'
     );
 
@@ -36,7 +36,7 @@ export class CreateClaimUseCase {
 
     // 2. Acquire authenticated session for the target platform
     const { page } =
-      await this.browserSession.createAuthenticatedSession(platform);
+      await this.browserManager.createAuthenticatedSession(platform);
 
     try {
       // 3. Execute automation (resolved per-platform)
@@ -57,7 +57,7 @@ export class CreateClaimUseCase {
       );
       return result;
     } finally {
-      await this.browserSession.releaseSession(page.context(), page);
+      await this.browserManager.releaseSession(page.context(), page);
     }
   }
 

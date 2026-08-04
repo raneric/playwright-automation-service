@@ -23,7 +23,9 @@ export class ClaimController {
     );
 
     if (!ticketCreationResult.success) {
-      this.logger.error(`Error creating ticket for ${input.customer}`);
+      this.logger.error(
+        `Error creating ticket for ${input.customer.organization}`
+      );
       res.status(422).json({
         success: false,
         error: {

@@ -45,9 +45,8 @@ async function main(): Promise<void> {
     logger.info({ signal }, 'Shutdown signal received');
 
     server.close(async () => {
-      // 'browserSession' is the container registration key for BrowserManager
       const browserManager =
-        container.resolve<BrowserManager>('browserSession');
+        container.resolve<BrowserManager>('browserManager');
       await browserManager.shutdown();
       logger.info('Shutdown complete');
       process.exit(0);

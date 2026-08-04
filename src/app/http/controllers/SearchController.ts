@@ -16,7 +16,7 @@ export class SearchController {
 
     if (!result.success) {
       this.logger.error(
-        `Error on searching data for the customer ${claim.customer}`
+        `Error on searching data for the customer ${claim.customer.organization}`
       );
       res.status(422).json({
         success: false,

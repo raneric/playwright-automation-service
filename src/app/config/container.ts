@@ -92,7 +92,7 @@ export function buildContainer(
 
   container.register({
     getPlatform: asValue(getPlatform),
-    browserSession: asClass(BrowserManager, { lifetime: 'SINGLETON' }),
+    browserManager: asClass(BrowserManager, { lifetime: 'SINGLETON' }),
     getLoginWorkflow: asValue(getLoginWorkflow),
     getClaimAutomation: asValue(getClaimAutomation),
     getSearchAutomation: asValue(getSearchAutomation),
