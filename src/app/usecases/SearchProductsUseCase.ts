@@ -1,21 +1,9 @@
-import { ClaimInputDTO, SearchInputDTO } from '../dto';
+import { ClaimInputDTO } from '../dto';
 import { Result } from '../../shared/Result';
 import { Logger } from '../../shared/logger';
 import { AutomationError } from '../../shared/errors';
-import { ProductDTO } from '../dto/ClaimDTO';
-import { IBrowserSession, ISearchAutomationPort } from '../../automation/ports';
-import { ProductResult } from '../../shared/types/FakeUISaas';
-
-export interface ProductSearchOutput {
-  allProductsFromSearch: ProductResult[];
-  unmatchedProducts: ProductDTO[];
-  matchedProducts: ProductDTO[];
-  reconciliationResult: {
-    totalProduct: number;
-    totalReconciledProduct: number;
-    success: boolean;
-  };
-}
+import { IBrowserSession, ISearchAutomationPort } from '../../shared/ports';
+import { ProductSearchOutput } from '../../shared/types/FakeUISaas';
 
 /**
  * Use case: Search for products on the order list page.
@@ -35,9 +23,8 @@ export class SearchProductsUseCase {
   ): Promise<Result<ProductSearchOutput>> {
     this.logger.info('SearchProductsUseCase: starting');
 
-    const { page } = await this.browserSession.createAuthenticatedSession(
-      platform
-    );
+    const { page } =
+      await this.browserSession.createAuthenticatedSession(platform);
 
     try {
       const automation = this.getSearchAutomation(platform);

@@ -8,9 +8,12 @@ import { PagePath } from '../../../../shared/constants';
 import { ClaimInputDTO } from '../../../../app/dto';
 import { ProductDTO } from '../../../../app/dto/ClaimDTO';
 import { stringValueProvided } from '../../utils/valueCheck';
-import { ProductResult, SearchTerm } from '../../../../shared/types/FakeUISaas';
-import { ProductSearchOutput } from '../../../../app/usecases/SearchProductsUseCase';
-import { ISearchAutomationPort } from '../../../ports';
+import {
+  ProductResult,
+  ProductSearchOutput,
+  SearchTerm,
+} from '../../../../shared/types/FakeUISaas';
+import { ISearchAutomationPort } from '../../../../shared/ports';
 
 /**
  * Playwright adapter implementing the Search automation port.

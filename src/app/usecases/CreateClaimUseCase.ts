@@ -2,7 +2,7 @@ import { ClaimInputDTO } from '../dto';
 import { Result } from '../../shared/Result';
 import { Logger } from '../../shared/logger';
 import { AutomationError } from '../../shared/errors';
-import { IBrowserSession, IClaimAutomationPort } from '../../automation/ports';
+import { IBrowserSession, IClaimAutomationPort } from '../../shared/ports';
 
 /**
  * Use case: Create a customer claim in the SaaS application.
@@ -25,7 +25,7 @@ export class CreateClaimUseCase {
   async execute(
     platform: string,
     input: ClaimInputDTO
-  ): Promise<Record<string, unknown>> {
+  ): Promise<Result<Record<string, unknown>>> {
     this.logger.info(
       { platform, orderCode: input.customer },
       'CreateClaimUseCase: starting'
@@ -35,9 +35,8 @@ export class CreateClaimUseCase {
     const formData = this.toFormData(input);
 
     // 2. Acquire authenticated session for the target platform
-    const { page } = await this.browserSession.createAuthenticatedSession(
-      platform
-    );
+    const { page } =
+      await this.browserSession.createAuthenticatedSession(platform);
 
     try {
       // 3. Execute automation (resolved per-platform)

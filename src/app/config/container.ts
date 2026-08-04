@@ -20,7 +20,7 @@ import { SearchController } from '../http/controllers/SearchController';
 import {
   IClaimAutomationPort,
   ISearchAutomationPort,
-} from '../../automation/ports';
+} from '../../shared/ports';
 
 /**
  * Build the Awilix DI container.

@@ -1,3 +1,5 @@
+import { ProductDTO } from '../../app/dto/ClaimDTO';
+
 export type TicketSubmissionResult = {
   ticketCreated: boolean;
   ticketId?: number;
@@ -33,4 +35,15 @@ export interface ProductResult {
   quantityOrdered: number;
   quantityBilled: number;
   quantityReceived: number;
+}
+
+export interface ProductSearchOutput {
+  allProductsFromSearch: ProductResult[];
+  unmatchedProducts: ProductDTO[];
+  matchedProducts: ProductDTO[];
+  reconciliationResult: {
+    totalProduct: number;
+    totalReconciledProduct: number;
+    success: boolean;
+  };
 }

@@ -18,12 +18,6 @@ const customerSchema = z.object({
   email: z.string().email().optional(),
 });
 
-// ── Vendor ─────────────────────────────────────────────────────
-const vendorSchema = z.object({
-  name: z.string().optional(),
-  id: z.number().int().optional(),
-});
-
 const verifiedFromAttachmentSchema = z.object({
   attachmentName: z.string(),
   attachmentType: z.string(),

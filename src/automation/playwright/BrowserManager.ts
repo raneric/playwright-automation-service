@@ -2,7 +2,7 @@ import { chromium, Browser, BrowserContext, Page } from 'playwright';
 import { Logger } from '../../shared/logger';
 import { AppConfig } from '../config';
 import { PlaywrightLoginWorkflow } from './interactions';
-import { IBrowserSession } from '../ports';
+import { IBrowserSession } from '../../shared/ports';
 
 /**
  * Simple counting semaphore for capping concurrent browser context creation.
@@ -109,8 +109,14 @@ export class BrowserManager implements IBrowserSession {
     const existing = this.authenticatedContexts.get(platform);
     if (existing) {
       this.logger.debug({ platform }, 'Reusing authenticated browser context');
-      const page = await existing.newPage();
-      return { context: existing, page };
+      await this.semaphore.acquire();
+      try {
+        const page = await existing.newPage();
+        return { context: existing, page };
+      } catch (err) {
+        this.semaphore.release();
+        throw err;
+      }
     }
 
     const { context, page } = await this.createSession();
@@ -150,6 +156,7 @@ export class BrowserManager implements IBrowserSession {
           { platform },
           'Released page from authenticated context (context retained)'
         );
+        this.semaphore.release();
         return;
       }
     }

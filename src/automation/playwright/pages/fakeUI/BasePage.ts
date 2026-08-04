@@ -1,4 +1,4 @@
-import { Page, Locator } from 'playwright';
+import { Page } from 'playwright';
 import { DEFAULT_TIMEOUTS } from '../../../../shared/constants';
 import { Logger } from '../../../../shared/logger';
 

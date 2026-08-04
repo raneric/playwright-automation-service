@@ -1,7 +1,7 @@
 import { Page } from 'playwright';
 import { Result } from '../../shared/Result';
-import { ProductSearchOutput } from '../../app/usecases/SearchProductsUseCase';
 import { ClaimInputDTO } from '../../app/dto';
+import { ProductSearchOutput } from '../types/FakeUISaas';
 
 export interface IClaimAutomationPort {
   createClaim(

@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { SearchProductsUseCase } from '../../usecases';
 import { Logger } from '../../../shared/logger';
-import { ClaimInputDTO, SearchInputDTO } from '../../dto';
+import { ClaimInputDTO } from '../../dto';
 
 export class SearchController {
   constructor(
@@ -15,6 +15,9 @@ export class SearchController {
     const result = await this.searchProductsUseCase.execute(platform, claim);
 
     if (!result.success) {
+      this.logger.error(
+        `Error on searching data for the customer ${claim.customer}`
+      );
       res.status(422).json({
         success: false,
         error: {

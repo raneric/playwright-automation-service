@@ -13,7 +13,8 @@
     "declarationMap": true,
     "sourceMap": true,
     "inlineSources": true,
-    "types": ["jest", "node"]
+    "types": ["jest", "node"],
+    "noUnusedLocals": true
   },
   "include": ["src/**/*", "tests/**/*"],
   "exclude": ["node_modules", "dist"]
