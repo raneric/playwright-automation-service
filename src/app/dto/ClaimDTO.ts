@@ -34,7 +34,7 @@ const productSchema = z.object({
   quantityBilled: z.number().nonnegative().nullable(),
   quantityReceived: z.number().nonnegative().nullable(),
   orderCode: z.string().min(1),
-  orderDate: z.string().min(1),
+  orderDate: z.string().min(1).nullable(),
   vendor: z.string(),
   status: z.string().min(1),
   existsInSystem: z.boolean(),

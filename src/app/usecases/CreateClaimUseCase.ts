@@ -5,7 +5,7 @@ import { AutomationError } from '../../shared/errors';
 import { IBrowserSession, IClaimAutomationPort } from '../../shared/ports';
 
 /**
- * Use case: Create a customer claim in the SaaS application.
+ * Use case: Create a customer claim in Fake UI.
  *
  * Orchestrates:
  *  1. Transform the API DTO into the domain entity
@@ -31,15 +31,12 @@ export class CreateClaimUseCase {
       'CreateClaimUseCase: starting'
     );
 
-    // 1. Transform DTO → domain entity → form data
     const formData = this.toFormData(input);
 
-    // 2. Acquire authenticated session for the target platform
     const { page } =
       await this.browserManager.createAuthenticatedSession(platform);
 
     try {
-      // 3. Execute automation (resolved per-platform)
       const automation = this.getClaimAutomation(platform);
       const result = await automation.createClaim(page, formData);
 
