@@ -10,8 +10,8 @@
       "remoteRoot": "${workspaceFolder}",
       "sourceMaps": true,
       "sourceMapPathOverrides": {
-        "${workspaceFolder}/*": "${workspaceFolder}/*",
-      },
-    },
-  ],
+        "${workspaceFolder}/*": "${workspaceFolder}/*"
+      }
+    }
+  ]
 }

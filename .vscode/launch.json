@@ -10,7 +10,10 @@
       "localRoot": "${workspaceFolder}",
       "sourceMaps": true,
       "restart": true,
-      "continueOnAttach": true
+      "continueOnAttach": true,
+      "sourceMapPathOverrides": {
+        "${workspaceFolder}/*": "${workspaceFolder}/*"
+      }
     },
     {
       "type": "node",

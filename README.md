@@ -72,7 +72,10 @@ src/
 │   │   ├── IAutomationPort.ts              # IClaimAutomationPort, ISearchAutomationPort
 │   │   └── IBrowserSession.ts              # IBrowserSession (createSession, createAuthenticatedSession, etc.)
 │   └── helperFunctions/
-│       └── envHelper.ts                    # Typed env var parsers (envStr, envInt, envBool)
+│       ├── envHelper.ts                    # Typed env var parsers (envStr, envInt, envBool)
+│       ├── searchHelpts.ts                 # extractTerm (orderCode → lotNumber → itemCode → productName)
+│       ├── searchMatcher.ts                # Shared match/merge/classify helpers for search adapters
+│       └── valueCheck.ts                   # stringValueProvided type guard
 │
 └── automation/                             # Playwright adapters, browser management, config, DB search
     ├── playwright/
@@ -97,17 +100,24 @@ src/
     │   │   ├── login.ts                     # Login page selectors
     │   │   └── orderList.ts                 # Order list table selectors
     │   └── utils/
-    │       ├── retry.ts                     # gotoWithRetry (navigation), retry (exponential backoff)
-    │       └── valueCheck.ts               # stringValueProvided helper
+    │       ├── index.ts                     # Re-exports gotoWithRetry, retry
+    │       └── retry.ts                     # gotoWithRetry (navigation), retry (exponential backoff)
     │
-    └── dbSearch/                            # Sequelize ORM for local database search
+    └── dbSearch/                            # Sequelize-backed search alternative to Playwright scraping
+        ├── DatabaseSearchAutomation.ts      # ISearchAutomationPort impl — queries Postgres directly
         ├── config/
         │   └── database.ts                  # PostgreSQL connection via Sequelize
-        └── models/
-            ├── vendor.model.ts              # Vendor (id, name, address, contact)
-            ├── customer.model.ts            # Customer (id, organization, department, address, contact)
-            ├── purchase-order.model.ts      # PurchaseOrder (document, product, quantities, FK to vendor/customer)
-            └── claim.model.ts               # Claim (request_info, customer, products as JSONB)
+        ├── models/
+        │   ├── vendor.model.ts              # Vendor (id, name, address, contact)
+        │   ├── customer.model.ts            # Customer (id, organization, department, address, contact)
+        │   ├── purchase-order.model.ts      # PurchaseOrder (document, product, quantities, FK to vendor/customer)
+        │   └── claim.model.ts               # Claim (request_info, customer, products as JSONB)
+        ├── repositories/
+        │   ├── CustomerRepository.ts        # Customer query helpers (findAll, findById)
+        │   ├── PurchaseOrderRepository.ts   # PurchaseOrder query helpers (findAll, findWhere, findByOrderCode)
+        │   └── VendorRepository.ts          # Vendor query helpers (findAll, findById)
+        └── type/
+            └── index.ts                     # QueryParams + PaginatedResult<T> shared types
 
 tests/
 ├── unit/                                   # Fast, no I/O — pure logic tests
@@ -141,7 +151,7 @@ tests/
 | **Clean Architecture**      | `app/usecases/` depends on `shared/ports/`                                | Use cases depend on interfaces, not implementations. Ports are owned by the shared layer.              |
 | **Dependency Injection**    | `app/config/container.ts` (Awilix)                                        | All wiring in one place. Use cases receive interfaces, never construct dependencies.                   |
 | **Page Object Model (POM)** | `automation/playwright/pages/`                                            | Each SaaS page is a class. Selectors centralized. No raw `page.fill()` in workflows.                   |
-| **Adapter Pattern**         | `automation/playwright/interactions/` implements `shared/ports/`          | Application layer depends on port interfaces, not Playwright. Swap engines without touching use cases. |
+| **Adapter Pattern**         | `automation/playwright/interactions/` and `automation/dbSearch/` implement `shared/ports/` | Application layer depends on port interfaces, not the concrete data source. Swap Playwright ↔ DB without touching use cases. |
 | **Strategy Pattern**        | `FormConfig` declarative definitions                                      | Same `FormPage` class fills any form. New form = new config, not new code.                             |
 | **Result Monad**            | `shared/types/Result.ts`                                                  | Forces explicit success/failure handling. No uncaught exceptions from use cases.                       |
 | **Factory**                 | `createApp()`, `buildContainer()`, route factories, per-platform adapters | Construction logic isolated and testable. Per-platform factories registered as values.                 |
@@ -255,7 +265,7 @@ All errors follow a consistent format:
 
 ## Configuration
 
-Configuration is split into two modules:
+Configuration is split into three modules:
 
 ### App-level config (`src/app/config/AppCofing.ts`)
 

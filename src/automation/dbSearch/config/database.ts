@@ -1,5 +1,8 @@
 import { Sequelize, type Dialect } from 'sequelize';
 
+import dotenv from 'dotenv';
+dotenv.config();
+
 const dbName = process.env.DB_NAME ?? '';
 const dbUser = process.env.DB_USER ?? '';
 const dbPassword = process.env.DB_PASSWORD ?? '';
@@ -16,3 +19,16 @@ export const sequelize = new Sequelize(dbName, dbUser, dbPassword, {
     timestamps: true,
   },
 });
+
+export function loadDatabaseConfig() {
+  return new Sequelize(dbName, dbUser, dbPassword, {
+    host: dbHost,
+    port: dbPort,
+    dialect: 'postgres' satisfies Dialect,
+    logging: process.env.NODE_ENV === 'development' ? console.log : false,
+    define: {
+      freezeTableName: true,
+      timestamps: true,
+    },
+  });
+}

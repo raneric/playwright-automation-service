@@ -18,7 +18,7 @@ export type TicketCreationOutput = {
 };
 
 export type SearchTerm = {
-  type: 'orderCode' | 'lotNumber' | 'itemCode' | 'productName';
+  type: 'order_code' | 'lot_number' | 'item_code' | 'product_name';
   value: string;
 };
 

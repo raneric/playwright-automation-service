@@ -25,6 +25,7 @@ import {
   ISearchAutomationPort,
 } from '../../shared/ports';
 import { AppConfig } from './AppCofing';
+import DatabaseSearchAutomation from '../../automation/dbSearch/DatabaseSearchAutomation';
 
 /**
  * Build the Awilix DI container.
@@ -103,13 +104,17 @@ export function buildContainer(
     return new PlaywrightSearchAutomation(platform, logger, browserManager);
   };
 
+  const getDatabaseAutomation = (): ISearchAutomationPort => {
+    return new DatabaseSearchAutomation();
+  };
+
   container.register({
     getPlatform: asValue(getPlatform),
     browserManager: asClass(BrowserManager, { lifetime: 'SINGLETON' }),
     getLoginWorkflow: asValue(getLoginWorkflow),
     getBrowsrManager: asValue(getBrowsrManager),
     getClaimAutomation: asValue(getClaimAutomation),
-    getSearchAutomation: asValue(getPlaywrightSearchAutomation),
+    getSearchAutomation: asValue(getDatabaseAutomation),
   });
 
   // ── Application ──────────────────────────────────────────────

@@ -6,16 +6,20 @@ import { gotoWithRetry } from '../../utils';
 import { PagePath } from '../../../../shared/constants';
 import { ClaimInputDTO } from '../../../../app/dto';
 import { ProductDTO } from '../../../../app/dto/ClaimDTO';
-import { stringValueProvided } from '../../utils/valueCheck';
 import {
   ProductResult,
   ProductSearchOutput,
-  SearchTerm,
 } from '../../../../shared/types/FakeUISaas';
 import {
   IBrowserSession,
   ISearchAutomationPort,
 } from '../../../../shared/ports';
+import { extractTerm } from '../../../../shared/helperFunctions/searchHelpts';
+import {
+  classifyProductResult,
+  findMatchedProduct,
+  buildProductSearchOutput,
+} from '../../../../shared/helperFunctions/searchMatcher';
 
 /**
  * Playwright adapter implementing the Search automation port.
@@ -50,11 +54,11 @@ export class PlaywrightSearchAutomation implements ISearchAutomationPort {
       const searchedTerms = new Set<string>();
 
       for (const productFromClaim of claim.products) {
-        const term = this.extractTerm(productFromClaim);
+        const term = extractTerm(productFromClaim);
 
         // Cache hit: term already searched — reuse existing results
         if (searchedTerms.has(term.value)) {
-          this.classifyResult(
+          classifyProductResult(
             allSearchResult,
             productFromClaim,
             claim.customer.organization,
@@ -86,7 +90,7 @@ export class PlaywrightSearchAutomation implements ISearchAutomationPort {
           allSearchResult.push(...productsFromSearch);
 
           if (!matchFound) {
-            const matchResult = this.getMatchedProduct(
+            const matchResult = findMatchedProduct(
               productsFromSearch,
               productFromClaim,
               claim.customer.organization
@@ -116,116 +120,17 @@ export class PlaywrightSearchAutomation implements ISearchAutomationPort {
       }
 
       this.logger.info({ count: allMatchedResults.length }, 'Search complete');
-      return Result.ok({
-        allProductsFromSearch: allSearchResult,
-        matchedProducts: allMatchedResults,
-        unmatchedProducts: unmatchedResults,
-        reconciliationResult: {
-          totalProduct: claim.products.length,
-          totalReconciledProduct: allMatchedResults.length,
-          success: allMatchedResults.length === claim.products.length,
-        },
-      });
+      return Result.ok(
+        buildProductSearchOutput(
+          allSearchResult,
+          allMatchedResults,
+          unmatchedResults,
+          claim.products.length
+        )
+      );
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       return Result.fail(new Error(message));
     }
-  }
-
-  private extractTerm(product: ProductDTO): SearchTerm {
-    if (stringValueProvided(product.orderCode)) {
-      return {
-        type: 'orderCode',
-        value: product.orderCode,
-      };
-    }
-
-    if (stringValueProvided(product.lotNumber)) {
-      return {
-        type: 'lotNumber',
-        value: product.lotNumber,
-      };
-    }
-
-    if (stringValueProvided(product.itemCode)) {
-      return {
-        type: 'itemCode',
-        value: product.itemCode,
-      };
-    }
-
-    return {
-      type: 'productName',
-      value: product.productName,
-    };
-  }
-
-  /**
-   * Classify a single product as matched or unmatched and push to the
-   * appropriate array. Extracted to eliminate duplicated logic between
-   * the cache-hit path and the fresh-search path.
-   */
-  private classifyResult(
-    results: ProductResult[],
-    product: ProductDTO,
-    customerName: string,
-    matched: ProductDTO[],
-    unmatched: ProductDTO[]
-  ): void {
-    const matchResult = this.getMatchedProduct(results, product, customerName);
-
-    if (matchResult.found && matchResult.product) {
-      matched.push(matchResult.product);
-    } else {
-      unmatched.push(product);
-    }
-  }
-
-  private getMatchedProduct(
-    products: ProductResult[],
-    product: ProductDTO,
-    customername: string
-  ): { found: boolean; product?: ProductDTO } {
-    const matchedProduct = products.find((p) => {
-      return (
-        p.itemCode === product.itemCode &&
-        p.vendor === product.vendor &&
-        p.customerName === customername &&
-        p.orderCode === product.orderCode
-      );
-    });
-
-    const mergedProduct = this.mergeMatchedAndProduct(matchedProduct, product);
-
-    return {
-      found: !!matchedProduct,
-      product: mergedProduct,
-    };
-  }
-
-  private mergeMatchedAndProduct(
-    matched?: ProductResult,
-    product?: ProductDTO
-  ): ProductDTO | undefined {
-    if (!product) return undefined;
-
-    return {
-      // fields that exist on ProductDTO but may be overridden by matched values
-      lineNumber: product.lineNumber,
-      documentNumber: matched?.documentNumber ?? product.documentNumber,
-      productName: matched?.productName ?? product.productName,
-      itemCode: matched?.itemCode ?? product.itemCode,
-      lotNumber: matched?.lotNumber ?? product.lotNumber,
-      quantityOrdered: matched?.quantityOrdered ?? product.quantityOrdered,
-      quantityBilled: matched?.quantityBilled ?? product.quantityBilled,
-      quantityReceived: matched?.quantityReceived ?? product.quantityReceived,
-      orderCode: matched?.orderCode ?? product.orderCode,
-      orderDate: matched?.orderDate ?? product.orderDate,
-      vendor: matched?.vendor ?? product.vendor,
-      status: product.status,
-      comments: product.comments ?? '',
-      verifiedFromTheSystem: true,
-      verifiedFromAttachment: product.verifiedFromAttachment,
-    };
   }
 }
