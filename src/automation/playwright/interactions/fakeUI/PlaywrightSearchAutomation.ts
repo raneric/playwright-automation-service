@@ -102,7 +102,11 @@ export class PlaywrightSearchAutomation implements ISearchAutomationPort {
         } while (!matchFound);
 
         if (!matchFound) {
-          unmatchedResults.push(productFromClaim);
+          const unmatched = {
+            ...productFromClaim,
+            verifiedFromTheSystem: false,
+          };
+          unmatchedResults.push(unmatched);
         }
       }
 
@@ -215,7 +219,7 @@ export class PlaywrightSearchAutomation implements ISearchAutomationPort {
       vendor: matched?.vendor ?? product.vendor,
       status: product.status,
       comments: product.comments ?? '',
-      existsInSystem: true,
+      verifiedFromTheSystem: true,
       verifiedFromAttachment: product.verifiedFromAttachment,
     };
   }

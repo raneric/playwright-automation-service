@@ -34,11 +34,11 @@ const productSchema = z.object({
   quantityBilled: z.number().nonnegative().nullable(),
   quantityReceived: z.number().nonnegative().nullable(),
   orderCode: z.string().min(1),
-  orderDate: z.string().min(1).nullable(),
+  orderDate: z.string().nullable(),
   vendor: z.string(),
-  status: z.string().min(1),
-  existsInSystem: z.boolean(),
-  comments: z.string().optional(),
+  status: z.string().nullable(),
+  verifiedFromTheSystem: z.boolean().optional(),
+  comments: z.string().optional().nullable(),
   verifiedFromAttachment: verifiedFromAttachmentSchema,
 });
 
