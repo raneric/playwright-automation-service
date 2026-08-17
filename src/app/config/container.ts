@@ -6,7 +6,10 @@ import {
   AwilixContainer,
 } from 'awilix';
 import { Logger } from '../../shared/logger';
-import { PlaywrightAppConfig, PlatformConfig } from '../../automation/config';
+import {
+  PlaywrightAppConfig,
+  PlatformConfig,
+} from '../../automation/playwright/config';
 import { BrowserManager } from '../../automation/playwright/BrowserManager';
 import {
   PlaywrightClaimAutomation,

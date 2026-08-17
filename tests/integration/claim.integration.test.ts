@@ -13,7 +13,7 @@ import request from 'supertest';
 import { asValue } from 'awilix';
 import { createApp } from '../../src/app/config/express';
 import { buildContainer } from '../../src/app/config/container';
-import { loadPlaywrightConfig } from '../../src/automation/config';
+import { loadPlaywrightConfig } from '../../src/automation/playwright/config';
 import { createLogger } from '../../src/shared/logger';
 import { Result } from '../../src/shared/types/Result';
 import type { Express } from 'express';

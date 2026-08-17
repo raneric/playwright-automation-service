@@ -1,6 +1,6 @@
 import { Page } from 'playwright';
 import { Logger } from '../../../../shared/logger';
-import { PlatformConfig } from '../../../config';
+import { PlatformConfig } from '../../config';
 import { LoginPage } from '../../pages';
 import { gotoWithRetry } from '../../utils';
 

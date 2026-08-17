@@ -1,6 +1,6 @@
 import { chromium, Browser, BrowserContext, Page } from 'playwright';
 import { Logger } from '../../shared/logger';
-import { PlaywrightAppConfig } from '../config';
+import { PlaywrightAppConfig } from './config';
 import { PlaywrightLoginWorkflow } from './interactions';
 import { IBrowserSession } from '../../shared/ports';
 

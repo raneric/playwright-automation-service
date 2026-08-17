@@ -7,7 +7,7 @@ import {
   envBool,
   envInt,
   envStr,
-} from '../../shared/helperFunctions/envHelper';
+} from '../../../shared/helperFunctions/envHelper';
 
 /** Configuration for a single target SaaS platform. */
 export interface PlatformConfig {

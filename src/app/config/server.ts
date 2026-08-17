@@ -1,6 +1,9 @@
 import 'dotenv/config';
 
-import { loadPlaywrightConfig, redactConfig } from '../../automation/config';
+import {
+  loadPlaywrightConfig,
+  redactConfig,
+} from '../../automation/playwright/config';
 import { createLogger } from '../../shared/logger';
 import { buildContainer } from './container';
 import { createApp } from './express';
