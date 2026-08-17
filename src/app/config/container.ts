@@ -87,13 +87,14 @@ export function buildContainer(
     return new PlaywrightLoginWorkflow(platform, logger);
   };
 
-  const getClaimAutomation = (platformName: string): IClaimAutomationPort => {
-    const platform = getPlatform(platformName);
-    return new PlaywrightClaimAutomation(platform, logger);
-  };
-
   const getBrowsrManager = (): BrowserManager => {
     return new BrowserManager(playwrightAppConfig, logger, getLoginWorkflow);
+  };
+
+  const getClaimAutomation = (platformName: string): IClaimAutomationPort => {
+    const platform = getPlatform(platformName);
+    const browserManager = getBrowsrManager();
+    return new PlaywrightClaimAutomation(platform, logger, browserManager);
   };
 
   const getPlaywrightSearchAutomation = (

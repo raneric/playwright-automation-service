@@ -1,4 +1,3 @@
-import { Page } from 'playwright';
 import { Logger } from '../../../../shared/logger';
 import { PlatformConfig } from '../../config';
 import { Result } from '../../../../shared/types/Result';
@@ -6,7 +5,10 @@ import { FormPage } from '../../pages';
 import { customerClaimConfig } from '../../config/form';
 import { gotoWithRetry, retry } from '../../utils';
 import { PagePath } from '../../../../shared/constants';
-import { IClaimAutomationPort } from '../../../../shared/ports';
+import {
+  IBrowserSession,
+  IClaimAutomationPort,
+} from '../../../../shared/ports';
 
 /**
  * Playwright adapter implementing the Claim automation port.
@@ -14,14 +16,18 @@ import { IClaimAutomationPort } from '../../../../shared/ports';
 export class PlaywrightClaimAutomation implements IClaimAutomationPort {
   constructor(
     private readonly platform: PlatformConfig,
-    private readonly logger: Logger
+    private readonly logger: Logger,
+    private readonly browserManager: IBrowserSession
   ) {}
 
   async createClaim(
-    page: Page,
     claimData: Record<string, unknown>
   ): Promise<Result<Record<string, unknown>>> {
     try {
+      const { page } = await this.browserManager.createAuthenticatedSession(
+        this.platform.name
+      );
+
       const formPage = new FormPage(page, this.logger, customerClaimConfig);
 
       await gotoWithRetry(

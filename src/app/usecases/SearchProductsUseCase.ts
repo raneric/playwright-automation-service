@@ -4,6 +4,7 @@ import { Logger } from '../../shared/logger';
 import { AutomationError } from '../../shared/errors';
 import { ISearchAutomationPort } from '../../shared/ports';
 import { ProductSearchOutput } from '../../shared/types/FakeUISaas';
+import { getErrorMessage } from '../../shared/helperFunctions/errorFunctions';
 
 /**
  * Use case: Search for products on the order list page.
@@ -44,7 +45,11 @@ export class SearchProductsUseCase {
         { platform, error },
         'SearchProductsUseCase: unexpected error'
       );
-      return Result.fail(new AutomationError('Unexpected error during search'));
+      return Result.fail(
+        new AutomationError(
+          `Error occured during product search ${getErrorMessage(error)}`
+        )
+      );
     }
   }
 }

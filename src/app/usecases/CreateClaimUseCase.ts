@@ -2,7 +2,8 @@ import { ClaimInputDTO } from '../dto';
 import { Result } from '../../shared/types/Result';
 import { Logger } from '../../shared/logger';
 import { AutomationError } from '../../shared/errors';
-import { IBrowserSession, IClaimAutomationPort } from '../../shared/ports';
+import { IClaimAutomationPort } from '../../shared/ports';
+import { getErrorMessage } from '../../shared/helperFunctions/errorFunctions';
 
 /**
  * Use case: Create a customer claim in Fake UI.
@@ -15,7 +16,6 @@ import { IBrowserSession, IClaimAutomationPort } from '../../shared/ports';
  */
 export class CreateClaimUseCase {
   constructor(
-    private readonly browserManager: IBrowserSession,
     private readonly getClaimAutomation: (
       platform: string
     ) => IClaimAutomationPort,
@@ -33,12 +33,9 @@ export class CreateClaimUseCase {
 
     const formData = this.toFormData(input);
 
-    const { page } =
-      await this.browserManager.createAuthenticatedSession(platform);
-
     try {
       const automation = this.getClaimAutomation(platform);
-      const result = await automation.createClaim(page, formData);
+      const result = await automation.createClaim(formData);
 
       if (!result.success) {
         this.logger.error(
@@ -53,8 +50,16 @@ export class CreateClaimUseCase {
         'CreateClaimUseCase: completed'
       );
       return result;
-    } finally {
-      await this.browserManager.releaseSession(page.context(), page);
+    } catch (error) {
+      this.logger.error(
+        { platform, error },
+        'CreateClaimUseCase: unexpected error'
+      );
+      return Result.fail(
+        new AutomationError(
+          `Error occured during ticket creation ${getErrorMessage(error)}`
+        )
+      );
     }
   }
 
