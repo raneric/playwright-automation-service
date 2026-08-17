@@ -91,17 +91,25 @@ export function buildContainer(
     return new PlaywrightClaimAutomation(platform, logger);
   };
 
-  const getSearchAutomation = (platformName: string): ISearchAutomationPort => {
+  const getBrowsrManager = (): BrowserManager => {
+    return new BrowserManager(playwrightAppConfig, logger, getLoginWorkflow);
+  };
+
+  const getPlaywrightSearchAutomation = (
+    platformName: string
+  ): ISearchAutomationPort => {
     const platform = getPlatform(platformName);
-    return new PlaywrightSearchAutomation(platform, logger);
+    const browserManager = getBrowsrManager();
+    return new PlaywrightSearchAutomation(platform, logger, browserManager);
   };
 
   container.register({
     getPlatform: asValue(getPlatform),
     browserManager: asClass(BrowserManager, { lifetime: 'SINGLETON' }),
     getLoginWorkflow: asValue(getLoginWorkflow),
+    getBrowsrManager: asValue(getBrowsrManager),
     getClaimAutomation: asValue(getClaimAutomation),
-    getSearchAutomation: asValue(getSearchAutomation),
+    getSearchAutomation: asValue(getPlaywrightSearchAutomation),
   });
 
   // ── Application ──────────────────────────────────────────────

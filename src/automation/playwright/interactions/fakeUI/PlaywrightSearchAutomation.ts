@@ -1,4 +1,3 @@
-import { Page } from 'playwright';
 import { Logger } from '../../../../shared/logger';
 import { PlatformConfig } from '../../config';
 import { Result } from '../../../../shared/types/Result';
@@ -13,7 +12,10 @@ import {
   ProductSearchOutput,
   SearchTerm,
 } from '../../../../shared/types/FakeUISaas';
-import { ISearchAutomationPort } from '../../../../shared/ports';
+import {
+  IBrowserSession,
+  ISearchAutomationPort,
+} from '../../../../shared/ports';
 
 /**
  * Playwright adapter implementing the Search automation port.
@@ -21,14 +23,17 @@ import { ISearchAutomationPort } from '../../../../shared/ports';
 export class PlaywrightSearchAutomation implements ISearchAutomationPort {
   constructor(
     private readonly platform: PlatformConfig,
-    private readonly logger: Logger
+    private readonly logger: Logger,
+    private readonly browserManager: IBrowserSession
   ) {}
 
   async searchProducts(
-    page: Page,
     claim: ClaimInputDTO
   ): Promise<Result<ProductSearchOutput>> {
     try {
+      const { page } = await this.browserManager.createAuthenticatedSession(
+        this.platform.name
+      );
       const listPage = new OrderListPage(page, this.logger);
 
       await gotoWithRetry(

@@ -2,7 +2,7 @@ import { ClaimInputDTO } from '../dto';
 import { Result } from '../../shared/types/Result';
 import { Logger } from '../../shared/logger';
 import { AutomationError } from '../../shared/errors';
-import { IBrowserSession, ISearchAutomationPort } from '../../shared/ports';
+import { ISearchAutomationPort } from '../../shared/ports';
 import { ProductSearchOutput } from '../../shared/types/FakeUISaas';
 
 /**
@@ -10,7 +10,6 @@ import { ProductSearchOutput } from '../../shared/types/FakeUISaas';
  */
 export class SearchProductsUseCase {
   constructor(
-    private readonly browserManager: IBrowserSession,
     private readonly getSearchAutomation: (
       platform: string
     ) => ISearchAutomationPort,
@@ -22,13 +21,9 @@ export class SearchProductsUseCase {
     claim: ClaimInputDTO
   ): Promise<Result<ProductSearchOutput>> {
     this.logger.info('SearchProductsUseCase: starting');
-
-    const { page } =
-      await this.browserManager.createAuthenticatedSession(platform);
-
     try {
       const automation = this.getSearchAutomation(platform);
-      const result = await automation.searchProducts(page, claim);
+      const result = await automation.searchProducts(claim);
 
       if (!result.success) {
         this.logger.error(
@@ -44,8 +39,12 @@ export class SearchProductsUseCase {
       );
 
       return Result.ok(result.value);
-    } finally {
-      await this.browserManager.releaseSession(page.context(), page);
+    } catch (error) {
+      this.logger.error(
+        { platform, error },
+        'SearchProductsUseCase: unexpected error'
+      );
+      return Result.fail(new AutomationError('Unexpected error during search'));
     }
   }
 }

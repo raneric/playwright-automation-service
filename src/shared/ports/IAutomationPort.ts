@@ -11,8 +11,5 @@ export interface IClaimAutomationPort {
 }
 
 export interface ISearchAutomationPort {
-  searchProducts(
-    page: Page,
-    claim: ClaimInputDTO
-  ): Promise<Result<ProductSearchOutput>>;
+  searchProducts(claim: ClaimInputDTO): Promise<Result<ProductSearchOutput>>;
 }
