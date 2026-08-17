@@ -3,18 +3,21 @@ import rateLimit from 'express-rate-limit';
 import { Logger } from '../../../shared/logger';
 import { AppError } from '../../../shared/errors';
 
-// ── Error Handler ─────────────────────────────────────────────────────────────
-
 /**
  * Global error-handling middleware.
  * Catches all errors thrown in route handlers and formats a consistent JSON response.
  */
 export function errorHandler(logger: Logger) {
-  return (err: Error, _req: Request, res: Response, _next: NextFunction): void => {
+  return (
+    err: Error,
+    _req: Request,
+    res: Response,
+    _next: NextFunction
+  ): void => {
     if (err instanceof AppError) {
       logger.warn(
         { code: err.code, statusCode: err.statusCode, message: err.message },
-        'Operational error',
+        'Operational error'
       );
       res.status(err.statusCode).json({
         success: false,
@@ -26,7 +29,6 @@ export function errorHandler(logger: Logger) {
       return;
     }
 
-    // Unexpected / programmer errors
     logger.error({ err }, 'Unexpected error');
     res.status(500).json({
       success: false,
@@ -41,8 +43,6 @@ export function errorHandler(logger: Logger) {
   };
 }
 
-// ── Request Logger ────────────────────────────────────────────────────────────
-
 export function requestLogger(logger: Logger) {
   return (req: Request, _res: Response, next: NextFunction): void => {
     logger.info({ method: req.method, url: req.url }, 'Incoming request');
@@ -50,37 +50,49 @@ export function requestLogger(logger: Logger) {
   };
 }
 
-// ── API Key Auth ──────────────────────────────────────────────────────────────
-
 /**
- * API key authentication middleware.
- * Checks the `x-api-key` header against the configured secret.
+ * Bearer token authentication middleware.
+ * Checks the `Authorization: Bearer <token>` header against the configured secret.
  *
- * When no API_KEY env var is set this middleware is skipped entirely,
+ * When no AUTH_TOKEN env var is set this middleware is skipped entirely,
  * making auth opt-in for local development while enforced in production.
  */
-export function apiKeyAuth(validKey: string | undefined, logger: Logger) {
+export function bearerTokenAuth(
+  validToken: string | undefined,
+  logger: Logger
+) {
   return (req: Request, res: Response, next: NextFunction): void => {
-    // Auth disabled — no key configured (e.g. local dev)
-    if (!validKey) {
-      next();
-      return;
+    if (!validToken) {
+      throw new AppError(
+        'Bearer token authentication is not configured. Set the AUTH_TOKEN env var to enable it.',
+        'AUTHENTICATION_ERROR',
+        500,
+        true
+      );
     }
 
-    const key = req.headers['x-api-key'];
-    if (!key || key !== validKey) {
-      logger.warn({ url: req.url }, 'Unauthorized request — invalid or missing API key');
+    const header = req.headers.authorization;
+    const token = header?.startsWith('Bearer ')
+      ? header.slice('Bearer '.length).trim()
+      : undefined;
+
+    if (!token || token !== validToken) {
+      logger.warn(
+        { url: req.url },
+        'Unauthorized request — invalid or missing bearer token'
+      );
       res.status(401).json({
         success: false,
-        error: { code: 'UNAUTHORIZED', message: 'Invalid or missing API key' },
+        error: {
+          code: 'AUTHENTICATION_ERROR',
+          message: 'Invalid or missing bearer token',
+        },
       });
       return;
     }
     next();
   };
 }
-
-// ── Rate Limiter ──────────────────────────────────────────────────────────────
 
 /**
  * Per-IP rate limiter for automation endpoints.
@@ -96,7 +108,7 @@ export function createRateLimiter() {
   return rateLimit({
     windowMs,
     max,
-    standardHeaders: true,  // Return rate limit info in RateLimit-* headers
+    standardHeaders: true,
     legacyHeaders: false,
     message: {
       success: false,
@@ -107,8 +119,6 @@ export function createRateLimiter() {
     },
   });
 }
-
-// ── Request Timeout ───────────────────────────────────────────────────────────
 
 /**
  * Aborts requests that take longer than `ms` milliseconds.

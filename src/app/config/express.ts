@@ -11,7 +11,7 @@ import {
   errorHandler,
   requestLogger,
   requestTimeout,
-  apiKeyAuth,
+  bearerTokenAuth,
   createRateLimiter,
 } from '../http/middleware';
 import { DEFAULT_TIMEOUTS } from '../../shared/constants';
@@ -26,7 +26,7 @@ import { DEFAULT_TIMEOUTS } from '../../shared/constants';
  *  3. Request timeout
  *  4. Health check (unauthenticated)
  *  5. Rate limiter  } applied to /api/* only
- *  6. API key auth  } per-platform
+ *  6. Bearer token auth  } applied to /api/* only
  *  7. Route handlers (mounted under /api/:platform)
  *  8. Error handler (must be last)
  */
@@ -47,12 +47,9 @@ export function createApp(container: AwilixContainer): Express {
   const apiRouter = express.Router();
   apiRouter.use(createRateLimiter());
 
-  // Per-platform API key auth: resolves the key from the :platform param
+  // Bearer token auth: a single service-wide token protects all /api/* routes
   apiRouter.use('/:platform', (req, res, next) => {
-    const platformName = req.params.platform as string;
-    const platform = config.platforms[platformName];
-    const apiKey = platform?.apiKey ?? config.defaultApiKey;
-    apiKeyAuth(apiKey, logger)(req, res, next);
+    bearerTokenAuth(config.authToken, logger)(req, res, next);
   });
 
   // Mount resource routes under /api/:platform

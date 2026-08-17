@@ -21,7 +21,7 @@ This service exposes HTTP endpoints that, when called, launch or reuse a Playwri
 | **Routes** | `src/app/http/routes/` | Define HTTP method, path, validation middleware, and controller binding |
 | **Validation** | `src/app/http/validation/` | Zod schema validation middleware — rejects malformed requests with 400 |
 | **Controllers** | `src/app/http/controllers/` | Thin request handlers — extract data from request, delegate to use case, format response |
-| **Middleware** | `src/app/http/middleware/` | Error handler, request logger, timeout, API key auth, rate limiter |
+| **Middleware** | `src/app/http/middleware/` | Error handler, request logger, timeout, bearer token auth, rate limiter |
 | **Use Cases** | `src/app/usecases/` | Application business logic — orchestrate domain services and automation ports |
 | **DTOs** | `src/app/dto/` | Zod-validated request/response schemas — the API contract |
 | **Ports** | `src/automation/ports/` | Interfaces that decouple use cases from Playwright adapters |
@@ -266,7 +266,7 @@ All errors follow a consistent format:
 | HTTP Status | Code | Meaning |
 |---|---|---|
 | 400 | `VALIDATION_ERROR` | Request body failed Zod schema validation |
-| 401 | `AUTHENTICATION_ERROR` | Missing or invalid API key |
+| 401 | `AUTHENTICATION_ERROR` | Missing or invalid bearer token |
 | 404 | `NOT_FOUND` | Resource not found |
 | 408 | `TIMEOUT` | Request exceeded the workflow timeout |
 | 422 | `AUTOMATION_ERROR` | The SaaS application rejected the operation |
@@ -306,7 +306,12 @@ All configuration is loaded from environment variables via `src/automation/confi
 | `NETWORK_DOWNLOAD_KBPS` | `0` | Download speed limit in kbps (0 = unlimited) |
 | `NETWORK_UPLOAD_KBPS` | `0` | Upload speed limit in kbps (0 = unlimited) |
 | `NETWORK_LATENCY_MS` | `0` | Round-trip latency in ms (0 = none) |
-| `API_KEY` | *(none)* | Optional API key for authentication |
+| `AUTH_TOKEN` | *(none)* | Bearer token required to call `/api/*` routes (when set) |
+
+> **Authentication** — All `/api/*` routes require a bearer token when `AUTH_TOKEN` is set:
+> `Authorization: Bearer <AUTH_TOKEN>`. When `AUTH_TOKEN` is unset, auth is
+> disabled (useful for local development). The `GET /health` endpoint remains
+> unauthenticated.
 
 Copy `.env.example` to `.env` and adjust values for your environment.
 

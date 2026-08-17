@@ -10,8 +10,6 @@ export interface PlatformConfig {
   loginUrl: string;
   username: string;
   password: string;
-  /** Optional API key for protecting this platform's endpoints */
-  apiKey: string | undefined;
 }
 
 export interface AppConfig {
@@ -20,8 +18,8 @@ export interface AppConfig {
   logLevel: string;
   logPretty: boolean;
 
-  /** Default API key used as fallback when a platform has none configured */
-  defaultApiKey: string | undefined;
+  /** Bearer token used to authenticate API requests */
+  authToken: string | undefined;
 
   /** All target SaaS platforms, keyed by a short name (e.g. "acme", "contoso") */
   platforms: Record<string, PlatformConfig>;
@@ -74,6 +72,7 @@ export function redactConfig(config: AppConfig): Record<string, unknown> {
   }
   return {
     ...config,
+    authToken: config.authToken ? '[REDACTED]' : config.authToken,
     platforms: redactedPlatforms,
   };
 }
@@ -107,7 +106,6 @@ function loadPlatforms(): Record<string, PlatformConfig> {
       loginUrl: envStr(`${prefix}LOGIN_URL`, 'http://localhost:5173/login'),
       username: envStr(`${prefix}USERNAME`, 'admin'),
       password: envStr(`${prefix}PASSWORD`, 'password123'),
-      apiKey: process.env[`${prefix}API_KEY`] || undefined,
     };
   }
 
@@ -121,7 +119,7 @@ export function loadConfig(): AppConfig {
     logLevel: envStr('LOG_LEVEL', 'info'),
     logPretty: envStr('NODE_ENV', 'development') !== 'production',
 
-    defaultApiKey: process.env.API_KEY || undefined,
+    authToken: process.env.AUTH_TOKEN || undefined,
     platforms: loadPlatforms(),
 
     browser: {
