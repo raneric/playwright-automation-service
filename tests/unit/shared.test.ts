@@ -1,4 +1,4 @@
-import { Result } from '../../src/shared/Result';
+import { Result } from '../../src/shared/types/Result';
 import {
   AppError,
   ValidationError,

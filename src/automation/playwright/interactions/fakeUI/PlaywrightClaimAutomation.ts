@@ -1,7 +1,7 @@
 import { Page } from 'playwright';
 import { Logger } from '../../../../shared/logger';
 import { PlatformConfig } from '../../../config';
-import { Result } from '../../../../shared/Result';
+import { Result } from '../../../../shared/types/Result';
 import { FormPage } from '../../pages';
 import { customerClaimConfig } from '../../../config/form';
 import { gotoWithRetry, retry } from '../../utils';

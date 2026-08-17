@@ -1,5 +1,5 @@
 import { Page } from 'playwright';
-import { Result } from '../../shared/Result';
+import { Result } from '../types/Result';
 import { ClaimInputDTO } from '../../app/dto';
 import { ProductSearchOutput } from '../types/FakeUISaas';
 

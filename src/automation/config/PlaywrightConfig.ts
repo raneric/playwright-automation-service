@@ -3,6 +3,12 @@
  * All secrets and environment-specific values flow through this single module.
  */
 
+import {
+  envBool,
+  envInt,
+  envStr,
+} from '../../shared/helperFunctions/envHelper';
+
 /** Configuration for a single target SaaS platform. */
 export interface PlatformConfig {
   name: string;
@@ -12,15 +18,7 @@ export interface PlatformConfig {
   password: string;
 }
 
-export interface AppConfig {
-  nodeEnv: string;
-  port: number;
-  logLevel: string;
-  logPretty: boolean;
-
-  /** Bearer token used to authenticate API requests */
-  authToken: string | undefined;
-
+export interface PlaywrightAppConfig {
   /** All target SaaS platforms, keyed by a short name (e.g. "acme", "contoso") */
   platforms: Record<string, PlatformConfig>;
 
@@ -46,33 +44,19 @@ export interface AppConfig {
   };
 }
 
-function envStr(key: string, fallback: string): string {
-  return process.env[key] ?? fallback;
-}
-
-function envInt(key: string, fallback: number): number {
-  const val = process.env[key];
-  return val ? parseInt(val, 10) : fallback;
-}
-
-function envBool(key: string, fallback: boolean): boolean {
-  const val = process.env[key];
-  if (val === undefined) return fallback;
-  return val === '1' || val.toLowerCase() === 'true';
-}
-
 /**
  * Serialization-safe view of the config — passwords redacted.
  * Used when logging the config at startup.
  */
-export function redactConfig(config: AppConfig): Record<string, unknown> {
+export function redactConfig(
+  config: PlaywrightAppConfig
+): Record<string, unknown> {
   const redactedPlatforms: Record<string, unknown> = {};
   for (const [name, p] of Object.entries(config.platforms)) {
     redactedPlatforms[name] = { ...p, password: '[REDACTED]' };
   }
   return {
     ...config,
-    authToken: config.authToken ? '[REDACTED]' : config.authToken,
     platforms: redactedPlatforms,
   };
 }
@@ -112,14 +96,8 @@ function loadPlatforms(): Record<string, PlatformConfig> {
   return platforms;
 }
 
-export function loadConfig(): AppConfig {
+export function loadPlaywrightConfig(): PlaywrightAppConfig {
   return {
-    nodeEnv: envStr('NODE_ENV', 'development'),
-    port: envInt('PORT', 3001),
-    logLevel: envStr('LOG_LEVEL', 'info'),
-    logPretty: envStr('NODE_ENV', 'development') !== 'production',
-
-    authToken: process.env.AUTH_TOKEN || undefined,
     platforms: loadPlatforms(),
 
     browser: {

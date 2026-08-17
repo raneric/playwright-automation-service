@@ -1,5 +1,5 @@
 import { ClaimInputDTO } from '../dto';
-import { Result } from '../../shared/Result';
+import { Result } from '../../shared/types/Result';
 import { Logger } from '../../shared/logger';
 import { AutomationError } from '../../shared/errors';
 import { IBrowserSession, ISearchAutomationPort } from '../../shared/ports';

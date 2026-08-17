@@ -1,6 +1,6 @@
 import { chromium, Browser, BrowserContext, Page } from 'playwright';
 import { Logger } from '../../shared/logger';
-import { AppConfig } from '../config';
+import { PlaywrightAppConfig } from '../config';
 import { PlaywrightLoginWorkflow } from './interactions';
 import { IBrowserSession } from '../../shared/ports';
 
@@ -48,14 +48,16 @@ export class BrowserManager implements IBrowserSession {
   private readonly semaphore: Semaphore;
 
   constructor(
-    private readonly config: AppConfig,
+    private readonly playwrightAppConfig: PlaywrightAppConfig,
     private readonly logger: Logger,
     /** Factory: given a platform name, returns a login workflow for that platform */
     private readonly getLoginWorkflow: (
       platform: string
     ) => PlaywrightLoginWorkflow
   ) {
-    this.semaphore = new Semaphore(config.browser.maxConcurrentContexts);
+    this.semaphore = new Semaphore(
+      playwrightAppConfig.browser.maxConcurrentContexts
+    );
   }
 
   // ── IBrowserSession implementation ────────────────────────────────────────
@@ -69,10 +71,10 @@ export class BrowserManager implements IBrowserSession {
 
     try {
       const browser = await this.getBrowser();
-      const { network } = this.config;
+      const { network } = this.playwrightAppConfig;
 
       const context = await browser.newContext({
-        viewport: this.config.browser.viewport,
+        viewport: this.playwrightAppConfig.browser.viewport,
         // Network throttling — simulates slow connections like Chrome DevTools
         offline: network.offline || undefined,
         ...(network.downloadThroughput > 0 && {
@@ -196,13 +198,13 @@ export class BrowserManager implements IBrowserSession {
   private async getBrowser(): Promise<Browser> {
     if (!this.browser || !this.browser.isConnected()) {
       this.logger.info(
-        { headless: this.config.browser.headless },
+        { headless: this.playwrightAppConfig.browser.headless },
         'Launching browser'
       );
 
       this.browser = await chromium.launch({
-        headless: this.config.browser.headless,
-        slowMo: this.config.browser.slowMo,
+        headless: this.playwrightAppConfig.browser.headless,
+        slowMo: this.playwrightAppConfig.browser.slowMo,
         args: ['--no-sandbox', '--disable-setuid-sandbox'],
       });
 

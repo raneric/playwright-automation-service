@@ -1,10 +1,11 @@
 import 'dotenv/config';
 
-import { loadConfig, redactConfig } from '../../automation/config';
+import { loadPlaywrightConfig, redactConfig } from '../../automation/config';
 import { createLogger } from '../../shared/logger';
 import { buildContainer } from './container';
 import { createApp } from './express';
 import { BrowserManager } from '../../automation/playwright/BrowserManager';
+import { loadAppConfig } from './AppCofing';
 
 /**
  * Application entry point.
@@ -18,24 +19,31 @@ import { BrowserManager } from '../../automation/playwright/BrowserManager';
  *  6. Register graceful shutdown handlers
  */
 async function main(): Promise<void> {
-  const config = loadConfig();
+  const playwrightAppConfig = loadPlaywrightConfig();
+  const appConfig = loadAppConfig();
   const logger = createLogger({
-    level: config.logLevel,
-    pretty: config.logPretty,
+    level: appConfig.logLevel,
+    pretty: appConfig.logPretty,
   });
 
   logger.info(
-    { env: config.nodeEnv },
+    { env: appConfig.nodeEnv },
     'Starting Playwright Automation Service'
   );
-  logger.debug({ config: redactConfig(config) }, 'Loaded configuration');
+  logger.debug(
+    { config: redactConfig(playwrightAppConfig) },
+    'Loaded configuration'
+  );
 
-  const container = buildContainer(config, logger);
+  const container = buildContainer(appConfig, playwrightAppConfig, logger);
   const app = createApp(container);
 
-  const server = app.listen(config.port, () => {
+  const server = app.listen(appConfig.port, () => {
     logger.info(
-      { port: config.port, platforms: Object.keys(config.platforms) },
+      {
+        port: appConfig.port,
+        platforms: Object.keys(playwrightAppConfig.platforms),
+      },
       'Server listening'
     );
   });

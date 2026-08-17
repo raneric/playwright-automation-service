@@ -4,7 +4,7 @@ import { FieldDescriptor } from '../../../config/form/types';
 import { BasePage } from './BasePage';
 import { FormConfig } from '../../../config/form/types';
 import { DEFAULT_TIMEOUTS } from '../../../../shared/constants';
-import { Result } from '../../../../shared/Result';
+import { Result } from '../../../../shared/types/Result';
 import { isRetryableStatus, RetryableError } from '../../../../shared/errors';
 import {
   TicketCreationOutput,

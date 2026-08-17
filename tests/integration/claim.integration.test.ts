@@ -13,10 +13,11 @@ import request from 'supertest';
 import { asValue } from 'awilix';
 import { createApp } from '../../src/app/config/express';
 import { buildContainer } from '../../src/app/config/container';
-import { loadConfig } from '../../src/automation/config';
+import { loadPlaywrightConfig } from '../../src/automation/config';
 import { createLogger } from '../../src/shared/logger';
-import { Result } from '../../src/shared/Result';
+import { Result } from '../../src/shared/types/Result';
 import type { Express } from 'express';
+import { loadAppConfig } from '../../src/app/config/AppCofing';
 
 // ── Mock objects ──────────────────────────────────────────────────────────────
 
@@ -63,11 +64,12 @@ const mockLoginWorkflow = {
 // ── App factory ───────────────────────────────────────────────────────────────
 
 function buildTestApp(): Express {
-  const config = loadConfig();
+  const playwrightConfig = loadPlaywrightConfig();
+  const appConfig = loadAppConfig();
   const logger = createLogger({ level: 'silent', pretty: false });
 
   // Build the real container then override infrastructure with mocks.
-  const container = buildContainer(config, logger);
+  const container = buildContainer(appConfig, playwrightConfig, logger);
   container.register({
     browserManager: asValue(mockBrowserSession),
     // Override per-platform factories with mocks that ignore the platform arg

@@ -6,7 +6,7 @@ import {
   AwilixContainer,
 } from 'awilix';
 import { Logger } from '../../shared/logger';
-import { AppConfig, PlatformConfig } from '../../automation/config';
+import { PlaywrightAppConfig, PlatformConfig } from '../../automation/config';
 import { BrowserManager } from '../../automation/playwright/BrowserManager';
 import {
   PlaywrightClaimAutomation,
@@ -21,6 +21,7 @@ import {
   IClaimAutomationPort,
   ISearchAutomationPort,
 } from '../../shared/ports';
+import { AppConfig } from './AppCofing';
 
 /**
  * Build the Awilix DI container.
@@ -43,7 +44,8 @@ import {
  * the function as a plain value — callers invoke it with their own arguments.
  */
 export function buildContainer(
-  config: AppConfig,
+  appConfig: AppConfig,
+  playwrightAppConfig: PlaywrightAppConfig,
   logger: Logger
 ): AwilixContainer {
   const container = createContainer({
@@ -52,7 +54,8 @@ export function buildContainer(
 
   // ── Values ───────────────────────────────────────────────────
   container.register({
-    config: asValue(config),
+    playwrightAppConfig: asValue(playwrightAppConfig),
+    appConfig: asValue(appConfig),
     logger: asValue(logger),
   });
 
@@ -60,11 +63,11 @@ export function buildContainer(
   // Returns a PlatformConfig by name, or throws if unknown.
   // Registered as a value so callers invoke it with their own platformName arg.
   const getPlatform = (platformName: string): PlatformConfig => {
-    const platform = config.platforms[platformName];
+    const platform = playwrightAppConfig.platforms[platformName];
     if (!platform) {
       throw new Error(
         `Unknown platform "${platformName}". Known: ${Object.keys(
-          config.platforms
+          playwrightAppConfig.platforms
         ).join(', ')}`
       );
     }

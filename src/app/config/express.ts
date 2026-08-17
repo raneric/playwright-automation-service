@@ -1,7 +1,6 @@
 import express, { Express } from 'express';
 import { AwilixContainer } from 'awilix';
 import { Logger } from '../../shared/logger';
-import { AppConfig } from '../../automation/config';
 import {
   createClaimRoutes,
   createSearchRoutes,
@@ -15,6 +14,7 @@ import {
   createRateLimiter,
 } from '../http/middleware';
 import { DEFAULT_TIMEOUTS } from '../../shared/constants';
+import { AppConfig } from './AppCofing';
 
 /**
  * Create and configure the Express application.
@@ -33,7 +33,7 @@ import { DEFAULT_TIMEOUTS } from '../../shared/constants';
 export function createApp(container: AwilixContainer): Express {
   const app = express();
   const logger = container.resolve<Logger>('logger');
-  const config = container.resolve<AppConfig>('config');
+  const appConfig = container.resolve<AppConfig>('appConfig');
 
   // ── Global middleware ─────────────────────────────────────────────────────
   app.use(express.json({ limit: '1mb' }));
@@ -49,7 +49,7 @@ export function createApp(container: AwilixContainer): Express {
 
   // Bearer token auth: a single service-wide token protects all /api/* routes
   apiRouter.use('/:platform', (req, res, next) => {
-    bearerTokenAuth(config.authToken, logger)(req, res, next);
+    bearerTokenAuth(appConfig.authToken, logger)(req, res, next);
   });
 
   // Mount resource routes under /api/:platform

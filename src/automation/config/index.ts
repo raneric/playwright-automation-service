@@ -1,2 +1,2 @@
-export { loadConfig, redactConfig } from './AppConfig';
-export type { AppConfig, PlatformConfig } from './AppConfig';
+export { loadPlaywrightConfig, redactConfig } from './PlaywrightConfig';
+export type { PlaywrightAppConfig, PlatformConfig } from './PlaywrightConfig';
